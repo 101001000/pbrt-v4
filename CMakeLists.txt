@@ -22,6 +22,8 @@ option (PBRT_DBG_LOGGING "Enable (very verbose!) debug logging" OFF)
 option (PBRT_NVTX "Insert NVTX annotations for NVIDIA Profiling and Debugging Tools" OFF)
 option (PBRT_NVML "Use NVML for GPU performance measurement" OFF)
 option (PBRT_USE_PREGENERATED_RGB_TO_SPECTRUM_TABLES "Use pregenerated rgbspectrum_*.cpp files rather than running rgb2spec_opt to generate them at build time" OFF)
+option (PBRT_ENABLE_CUDA "Enable detection and compilation of the CUDA renderer" ON)
+option (PBRT_BUILD_PORTABLERT "Build the portableRT backend (implies PBRT_ENABLE_CUDA=OFF)" OFF)
 set (PBRT_OPTIX_PATH $ENV{PBRT_OPTIX_PATH} CACHE PATH "Path to OptiX SDK")
 set (PBRT_GPU_SHADER_MODEL "" CACHE STRING "")
 
@@ -173,6 +175,16 @@ add_library (pbrt_opt INTERFACE)
 
 add_library (cuda_build_configuration INTERFACE)
 
+# Explicit opt-out: the CUDA toolchain is neither detected nor used when the
+# renderer is configured for the portableRT backend or CUDA is disabled.
+if (PBRT_BUILD_PORTABLERT)
+  set (PBRT_ENABLE_CUDA OFF)
+  message (STATUS "CUDA disabled: portableRT backend requested")
+elseif (NOT PBRT_ENABLE_CUDA)
+  message (STATUS "CUDA disabled: PBRT_ENABLE_CUDA is OFF")
+endif ()
+
+if (PBRT_ENABLE_CUDA)
 include (CheckLanguage)
 
 check_language(CUDA)
@@ -370,7 +382,18 @@ of CUDA installed, please update your PATH.")
     endif ()
   endif()
 else ()
-    message (STATUS "CUDA not found")
+    if (PBRT_ENABLE_CUDA)
+        message (STATUS "CUDA not found")
+    endif ()
+endif ()  # if (CMAKE_CUDA_COMPILER)
+endif ()  # if (PBRT_ENABLE_CUDA)
+
+###########################################################################
+# portableRT backend
+
+if (PBRT_BUILD_PORTABLERT)
+  include (cmake/portablert.cmake)
+  list (APPEND PBRT_DEFINITIONS "PBRT_BUILD_PORTABLERT")
 endif ()
 
 ###########################################################################
@@ -902,6 +925,10 @@ endif ()
 target_compile_options (pbrt_lib PUBLIC ${PBRT_CXX_FLAGS})
 
 target_link_libraries (pbrt_lib PRIVATE OpenEXR::OpenEXR pbrt_warnings pbrt_opt $<$<BOOL:PBRT_CUDA_ENABLED>:cuda_build_configuration>)
+
+if (PBRT_BUILD_PORTABLERT)
+  target_link_libraries (pbrt_lib PRIVATE portableRT::portableRT)
+endif ()
 
 add_sanitizers (pbrt_lib)
 

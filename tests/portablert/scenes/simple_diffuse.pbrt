@@ -1,0 +1,38 @@
+# Self-contained smoke scene: diffuse triangles, a sphere, an area light and
+# an infinite light. Used for baseline CPU renders and portableRT comparisons.
+Film "rgb" "string filename" "simple_diffuse.png"
+     "integer xresolution" [320] "integer yresolution" [240]
+
+Sampler "sobol" "integer pixelsamples" [16]
+
+Integrator "path"
+
+LookAt 0 1.5 -6   0 0.8 0   0 1 0
+
+WorldBegin
+
+LightSource "infinite" "rgb L" [0.4 0.4 0.4]
+
+AttributeBegin
+    Material "diffuse" "rgb reflectance" [0.6 0.6 0.6]
+    Shape "trianglemesh" "integer indices" [0 1 2 0 2 3]
+        "point3 P" [-6 0 -6  6 0 -6  6 0 6  -6 0 6]
+AttributeEnd
+
+AttributeBegin
+    Material "diffuse" "rgb reflectance" [0.7 0.2 0.2]
+    Shape "sphere" "float radius" [1]
+AttributeEnd
+
+AttributeBegin
+    Material "diffuse" "rgb reflectance" [0.2 0.7 0.2]
+    Shape "trianglemesh" "integer indices" [0 1 2]
+        "point3 P" [1.5 0 1.5  3 0 1.5  2.2 2 1.8]
+AttributeEnd
+
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [30 30 30]
+    Shape "trianglemesh" "integer indices" [0 1 2]
+        "point3 P" [-1.5 4 -1  1.5 4 -1  0 4 1]
+AttributeEnd
+
