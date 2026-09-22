@@ -19,24 +19,6 @@ if (NOT EXISTS "${PORTABLERT_ROOT}/lib/cmake/portableRT/portableRTConfig.cmake")
            "Set -DPORTABLERT_ROOT=<path to portableRT's build/install directory>.")
 endif ()
 
-# Locate a DPC++ installation unless the user provided one. It is needed for
-# preprocessing and compiling the portableRT SYCL kernel variants. The
-# requirements mirror portableRT's own detect_sycl() exactly.
-if (NOT DPCPP_ROOT)
-  foreach (_prt_candidate
-           "$ENV{DPCPP_ROOT}"
-           "/scratch/homelocal/encalle/dpc++6.1.0"
-           "/opt/intel/oneapi/compiler/latest")
-    if (EXISTS "${_prt_candidate}/bin/clang++"
-        AND EXISTS "${_prt_candidate}/lib/libsycl.so"
-        AND EXISTS "${_prt_candidate}/lib/libur_loader.so")
-      set (DPCPP_ROOT "${_prt_candidate}" CACHE PATH
-           "Path to the oneAPI DPC++ installation used to build portableRT SYCL kernels" FORCE)
-      break ()
-    endif ()
-  endforeach ()
-endif ()
-
 # Select exactly which prebuilt portableRT features this project consumes.
 # These must be decided before find_package loads portableRT's Features.cmake.
 set (USE_CUDA OFF)
@@ -45,24 +27,21 @@ set (USE_HIP OFF)
 set (USE_HIPRT OFF)
 set (USE_EMBREE OFF)
 set (USE_EMBREE_SYCL OFF)
-set (USE_SYCL AUTO)
+set (USE_SYCL ON)
 
 set (portableRT_DIR "${PORTABLERT_ROOT}/lib/cmake/portableRT")
 find_package (portableRT CONFIG REQUIRED)
 
-if (USE_SYCL)
-  if (NOT EXISTS "${DPCPP_ROOT}/bin/clang++")
-    message (FATAL_ERROR
-             "USE_SYCL requires the DPC++ compiler. "
-             "Set -DDPCPP_ROOT=<oneAPI compiler installation>.")
-  endif ()
-  # The installed kernel macros probe for CUDA/HIP to pick extra SYCL
-  # targets; pin the target list to the Intel GPU/SPIR-V target that
-  # portableRT itself was built for.
-  set (KA_SYCL_COMPILE_TARGETS "spir64" CACHE STRING "portableRT SYCL kernel targets")
-endif ()
+# The installed kernel macros probe for CUDA/HIP to pick extra SYCL targets;
+# pin the target list to the Intel GPU/SPIR-V target that portableRT itself
+# was built for.
+set (KA_SYCL_COMPILE_TARGETS "spir64" CACHE STRING "portableRT SYCL kernel targets")
 
-message (STATUS "portableRT: ${PORTABLERT_ROOT} (SYCL: ${USE_SYCL}, DPC++: ${DPCPP_ROOT})")
+if (USE_SYCL)
+  message (STATUS "portableRT: ${PORTABLERT_ROOT} (SYCL, DPC++: ${DPCPP_ROOT})")
+else ()
+  message (STATUS "portableRT: ${PORTABLERT_ROOT} (SYCL unavailable: CPU backends only)")
+endif ()
 
 # The imported portableRT target embeds no runtime search path for its own
 # libraries, so teach the build (and later the install tree) where they are.
