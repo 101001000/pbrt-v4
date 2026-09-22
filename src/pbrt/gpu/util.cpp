@@ -11,7 +11,72 @@
 #include <pbrt/util/print.h>
 
 #include <algorithm>
+#include <cstring>
 #include <vector>
+
+#ifdef PBRT_BUILD_PORTABLERT
+
+#include <portableRT/portableRT.hpp>
+
+namespace pbrt {
+
+namespace {
+prt::Backend *selectedBackend = nullptr;
+}  // namespace
+
+prt::Backend *PRTBackend() {
+    return selectedBackend;
+}
+
+void GPUInit() {
+    // Prefer an accelerator; the CPU backend is the last resort so that the
+    // portableRT path can still render on machines without one.
+    prt::Backend *candidate = nullptr;
+    for (prt::Backend *backend : prt::available_backends())
+        if (candidate == nullptr || backend->name() != "CPU")
+            candidate = backend;
+
+    if (candidate != nullptr) {
+        try {
+            candidate->shutdown();
+            candidate->init();
+            selectedBackend = candidate;
+        } catch (const std::exception &e) {
+            LOG_ERROR("portableRT backend %s unavailable: %s", candidate->name().c_str(),
+                      e.what());
+        }
+    }
+
+    if (selectedBackend == nullptr)
+        LOG_FATAL("No usable portableRT backend found.");
+
+    // Restrict ourselves to the BVH layout of the integrated kernels.
+    for (int i = 0; i < selectedBackend->bvh_layout_count(); ++i) {
+        selectedBackend->select_bvh_layout(i);
+        if (selectedBackend->get_bvh_layout()->name == "native_bvh2")
+            break;
+    }
+
+    LOG_VERBOSE("portableRT backend %s (%s), BVH layout %s", selectedBackend->name().c_str(),
+                selectedBackend->device_name().c_str(),
+                selectedBackend->get_bvh_layout()->name.c_str());
+}
+
+void GPUThreadInit() {}
+
+void GPUWait() {
+    if (selectedBackend != nullptr)
+        selectedBackend->sync();
+}
+
+void GPUMemset(void *ptr, int byte, size_t bytes) {
+    // Wavefront queues live in shared memory (host-writable, device-visible).
+    memset(ptr, byte, bytes);
+}
+
+}  // namespace pbrt
+
+#else  // !PBRT_BUILD_PORTABLERT
 
 #ifdef NVTX
 #ifdef PBRT_IS_WINDOWS
@@ -254,3 +319,5 @@ void ReportKernelStats() {
 }
 
 }  // namespace pbrt
+
+#endif  // PBRT_BUILD_PORTABLERT

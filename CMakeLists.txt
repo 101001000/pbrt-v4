@@ -928,6 +928,7 @@ target_link_libraries (pbrt_lib PRIVATE OpenEXR::OpenEXR pbrt_warnings pbrt_opt 
 
 if (PBRT_BUILD_PORTABLERT)
   target_link_libraries (pbrt_lib PRIVATE portableRT::portableRT)
+  target_sources (pbrt_lib PRIVATE src/pbrt/gpu/util.cpp)
 endif ()
 
 add_sanitizers (pbrt_lib)

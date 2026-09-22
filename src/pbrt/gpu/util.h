@@ -18,6 +18,30 @@
 #include <utility>
 #include <vector>
 
+#ifdef PBRT_BUILD_PORTABLERT
+
+// portableRT flavor: entry points with the same names as the CUDA build, but
+// implemented over the portableRT runtime (src/pbrt/gpu/util.cpp).
+namespace prt {
+class Backend;
+}
+
+namespace pbrt {
+
+// The backend selected by GPUInit(); null before GPUInit.
+prt::Backend *PRTBackend();
+
+void GPUInit();
+void GPUThreadInit();
+
+void GPUWait();
+
+void GPUMemset(void *ptr, int byte, size_t bytes);
+
+}  // namespace pbrt
+
+#else  // !PBRT_BUILD_PORTABLERT
+
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
@@ -129,5 +153,7 @@ void GPURegisterThread(const char *name);
 void GPUNameStream(cudaStream_t stream, const char *name);
 
 }  // namespace pbrt
+
+#endif  // PBRT_BUILD_PORTABLERT
 
 #endif  // PBRT_GPU_UTIL_H
