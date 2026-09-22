@@ -20,7 +20,7 @@
 
 namespace pbrt {
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 
 class CUDAMemoryResource : public pstd::pmr::memory_resource {
     void *do_allocate(size_t size, size_t alignment);

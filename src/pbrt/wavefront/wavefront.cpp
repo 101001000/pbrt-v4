@@ -4,7 +4,7 @@
 
 #include <pbrt/wavefront/wavefront.h>
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/memory.h>
 #endif  // PBRT_BUILD_GPU_RENDERER
 #include <pbrt/wavefront/integrator.h>
@@ -14,7 +14,7 @@ namespace pbrt {
 void RenderWavefront(BasicScene &scene) {
     WavefrontPathIntegrator *integrator = nullptr;
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     if (Options->useGPU) {
 #ifdef PBRT_IS_WINDOWS
         // NOTE: on Windows, where only basic unified memory is supported, the

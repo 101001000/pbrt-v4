@@ -78,6 +78,11 @@ cmake --build build-cpu-reference -j 16 --target pbrt_test
 
 - [x] C01: build integration (installed portableRT discovery, link, CUDA disabled)
 - [x] C05 (probe): named-kernel launch mechanism validated on CPU and SYCL
+- [x] C02: GPUInit/GPUWait/GPUMemset implemented over portableRT (backend
+  selection with availability check, native_bvh2 layout pinning)
+- [x] C03: CUDAMemoryResource/CUDATrackedMemoryResource over shared_malloc;
+  `--gpu` drives the portableRT runtime; wavefront launches execute on the
+  host and render bit-identically to the reference `--wavefront` output
 - [ ] C02: runtime initialization through the existing GPU path
 - [ ] C03: memory allocation and transfer adapters
 - [ ] C04: device globals preserved and initialized

@@ -46,3 +46,19 @@ endif ()
 # The imported portableRT target embeds no runtime search path for its own
 # libraries, so teach the build (and later the install tree) where they are.
 list (APPEND CMAKE_BUILD_RPATH "${PORTABLERT_ROOT}/lib")
+
+# Targets that carry portableRT-generated SYCL kernel libraries link against
+# the SYCL runtime with an RPATH of $ORIGIN only (fixed inside portableRT's
+# installed macros). Make the SYCL runtime discoverable next to those
+# libraries by symlinking it into the target's output directory.
+function (prt_add_sycl_runtime_libraries target)
+  if (NOT USE_SYCL)
+    return ()
+  endif ()
+  foreach (_prt_lib libportableRT_sycl.so libsycl.so.8 libur_loader.so.0)
+    add_custom_command (TARGET ${target} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E create_symlink
+              "${PORTABLERT_ROOT}/lib/${_prt_lib}"
+              "$<TARGET_FILE_DIR:${target}>/${_prt_lib}")
+  endforeach ()
+endfunction ()

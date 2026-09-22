@@ -8,6 +8,67 @@
 #include <pbrt/util/check.h>
 #include <pbrt/util/log.h>
 
+#ifdef PBRT_BUILD_PORTABLERT
+
+#include <portableRT/portableRT.hpp>
+
+#include <cstring>
+
+namespace pbrt {
+
+void *CUDAMemoryResource::do_allocate(size_t size, size_t alignment) {
+    // portableRT backends hand out 16-byte aligned memory that is visible to
+    // both the host and the device (USM shared on SYCL).
+    void *ptr = PRTBackend()->shared_malloc(size);
+    CHECK_EQ(0, intptr_t(ptr) % alignment);
+    return ptr;
+}
+
+void CUDAMemoryResource::do_deallocate(void *p, size_t bytes, size_t alignment) {
+    if (PRTBackend() != nullptr)
+        PRTBackend()->device_free(p);
+}
+
+void *CUDATrackedMemoryResource::do_allocate(size_t size, size_t alignment) {
+    if (size == 0)
+        return nullptr;
+
+    void *ptr = PRTBackend()->shared_malloc(size);
+    DCHECK_EQ(0, intptr_t(ptr) % alignment);
+
+    std::lock_guard<std::mutex> lock(mutex);
+    allocations[ptr] = size;
+    bytesAllocated += size;
+
+    return ptr;
+}
+
+void CUDATrackedMemoryResource::do_deallocate(void *p, size_t size, size_t alignment) {
+    if (!p)
+        return;
+
+    if (PRTBackend() != nullptr)
+        PRTBackend()->device_free(p);
+
+    std::lock_guard<std::mutex> lock(mutex);
+    auto iter = allocations.find(p);
+    DCHECK(iter != allocations.end());
+    allocations.erase(iter);
+    bytesAllocated -= size;
+}
+
+void CUDATrackedMemoryResource::PrefetchToGPU() const {
+    // Shared memory is coherent between host and device; nothing to do.
+    if (PRTBackend() != nullptr)
+        PRTBackend()->sync();
+}
+
+CUDATrackedMemoryResource CUDATrackedMemoryResource::singleton;
+
+}  // namespace pbrt
+
+#else  // !PBRT_BUILD_PORTABLERT
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 
@@ -80,3 +141,4 @@ void CUDATrackedMemoryResource::PrefetchToGPU() const {
 CUDATrackedMemoryResource CUDATrackedMemoryResource::singleton;
 
 }  // namespace pbrt
+#endif  // PBRT_BUILD_PORTABLERT

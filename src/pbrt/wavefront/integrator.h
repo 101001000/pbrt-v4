@@ -93,6 +93,10 @@ class WavefrontPathIntegrator {
         if (Options->useGPU)
 #ifdef PBRT_BUILD_GPU_RENDERER
             GPUParallelFor(description, nItems, func);
+#elif defined(PBRT_BUILD_PORTABLERT)
+            // The portableRT launch adapters land in a later step; host
+            // execution keeps --gpu renders correct meanwhile.
+            pbrt::ParallelFor(0, nItems, func);
 #else
             LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");
 #endif
@@ -105,6 +109,8 @@ class WavefrontPathIntegrator {
         if (Options->useGPU)
 #ifdef PBRT_BUILD_GPU_RENDERER
             GPUParallelFor(description, 1, [=] PBRT_GPU(int) mutable { func(); });
+#elif defined(PBRT_BUILD_PORTABLERT)
+            func();
 #else
             LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");
 #endif

@@ -126,6 +126,10 @@ void ForAllQueued(const char *desc, const WorkQueue<WorkItem> *q, int maxQueued,
                 return;
             func((*q)[index]);
         });
+#elif defined(PBRT_BUILD_PORTABLERT)
+        // The portableRT launch adapters land in a later step; host execution
+        // keeps --gpu renders correct meanwhile.
+        ParallelFor(0, q->Size(), [&](int index) { func((*q)[index]); });
 #else
         LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");
 #endif

@@ -4,10 +4,10 @@
 
 #include <pbrt/pbrt.h>
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/memory.h>
 #include <pbrt/gpu/util.h>
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif
 #include <pbrt/options.h>
 #include <pbrt/shapes.h>
 #include <pbrt/util/check.h>
@@ -95,6 +95,21 @@ void InitPBRT(const PBRTOptions &opt) {
         GPUInit();
 
         CopyOptionsToGPU();
+
+        // Leak this so memory it allocates isn't freed
+        pstd::pmr::monotonic_buffer_resource *bufferResource =
+            new pstd::pmr::monotonic_buffer_resource(
+                1024 * 1024, &CUDATrackedMemoryResource::singleton);
+        Allocator alloc(bufferResource);
+        ColorEncoding::Init(alloc);
+        Spectra::Init(alloc);
+        RGBToSpectrumTable::Init(alloc);
+
+        RGBColorSpace::Init(alloc);
+        Triangle::Init(alloc);
+        BilinearPatch::Init(alloc);
+#elif defined(PBRT_BUILD_PORTABLERT)
+        GPUInit();
 
         // Leak this so memory it allocates isn't freed
         pstd::pmr::monotonic_buffer_resource *bufferResource =

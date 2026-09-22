@@ -161,6 +161,11 @@ WavefrontPathIntegrator::WavefrontPathIntegrator(
         CHECK(mr);
         aggregate = new OptiXAggregate(scene, mr, textures, shapeIndexToAreaLights, media,
                                        namedMaterials, materials);
+#elif defined(PBRT_BUILD_PORTABLERT)
+        // The portableRT backend takes over aggregation and traversal in a
+        // later step; the CPU aggregate keeps --gpu renders correct meanwhile.
+        aggregate = new CPUAggregate(scene, textures, shapeIndexToAreaLights, media,
+                                     namedMaterials, materials);
 #else
         LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");
 #endif

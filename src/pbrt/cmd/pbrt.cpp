@@ -5,9 +5,9 @@
 #include <pbrt/pbrt.h>
 
 #include <pbrt/cpu/render.h>
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/memory.h>
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif
 #include <pbrt/options.h>
 #include <pbrt/parser.h>
 #include <pbrt/scene.h>
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
             }
             options.pixelMaterial = Point2i(p[0], p[1]);
         } else if (
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
             ParseArg(&iter, args.end(), "gpu", &options.useGPU, onError) ||
             ParseArg(&iter, args.end(), "gpu-device", &options.gpuDevice, onError) ||
 #endif

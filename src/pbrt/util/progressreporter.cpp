@@ -49,7 +49,7 @@ ProgressReporter::ProgressReporter(int64_t totalWork, std::string title, bool qu
         for (cudaEvent_t &event : gpuEvents)
             CUDA_CHECK(cudaEventCreate(&event));
     }
-#else
+#elif !defined(PBRT_BUILD_PORTABLERT)
     CHECK(gpu == false);
 #endif
 
