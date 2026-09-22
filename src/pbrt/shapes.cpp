@@ -5,7 +5,7 @@
 #include <pbrt/shapes.h>
 
 #include <pbrt/textures.h>
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/util.h>
 #endif  // PBRT_BUILD_GPU_RENDERER
 #include <pbrt/interaction.h>
@@ -149,16 +149,15 @@ std::string TriangleIntersection::ToString() const {
 }
 
 pstd::vector<const TriangleMesh *> *Triangle::allMeshes;
-#if defined(PBRT_BUILD_GPU_RENDERER)
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 PBRT_GPU pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
 #endif
 
 void Triangle::Init(Allocator alloc) {
     allMeshes = alloc.new_object<pstd::vector<const TriangleMesh *>>(alloc);
-#if defined(PBRT_BUILD_GPU_RENDERER)
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     if (Options->useGPU)
-        CUDA_CHECK(cudaMemcpyToSymbol((const void *)&allTriangleMeshesGPU,
-                                     (const void *)&allMeshes, sizeof(allMeshes)));
+        PBRT_COPY_TO_SYMBOL(allTriangleMeshesGPU, &allMeshes, sizeof(allMeshes));
 #endif
 }
 
@@ -1018,17 +1017,15 @@ pstd::vector<Shape> BilinearPatch::CreatePatches(const BilinearPatchMesh *mesh,
 }
 
 pstd::vector<const BilinearPatchMesh *> *BilinearPatch::allMeshes;
-#if defined(PBRT_BUILD_GPU_RENDERER)
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 PBRT_GPU pstd::vector<const BilinearPatchMesh *> *allBilinearMeshesGPU;
 #endif
 
 void BilinearPatch::Init(Allocator alloc) {
     allMeshes = alloc.new_object<pstd::vector<const BilinearPatchMesh *>>(alloc);
-#if defined(PBRT_BUILD_GPU_RENDERER)
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     if (Options->useGPU)
-        CUDA_CHECK(cudaMemcpyToSymbol((const void *)&allBilinearMeshesGPU,
-                                     (const void *)&allMeshes,
-                                     sizeof(allMeshes)));
+        PBRT_COPY_TO_SYMBOL(allBilinearMeshesGPU, &allMeshes, sizeof(allMeshes));
 #endif
 }
 

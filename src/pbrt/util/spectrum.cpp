@@ -8,7 +8,7 @@
 
 #include <pbrt/util/spectrum.h>
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/util.h>
 #endif
 #include <pbrt/options.h>
@@ -2568,7 +2568,7 @@ DenselySampledSpectrum D(Float temperature, Allocator alloc) {
 
 namespace Spectra {
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 PBRT_GPU DenselySampledSpectrum *xGPU, *yGPU, *zGPU;
 #endif
 DenselySampledSpectrum *x, *y, *z;
@@ -2589,11 +2589,11 @@ void Init(Allocator alloc) {
     PiecewiseLinearSpectrum zpls(CIE_lambda, CIE_Z);
     z = alloc.new_object<DenselySampledSpectrum>(&zpls, alloc);
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     if (Options->useGPU) {
-        CUDA_CHECK(cudaMemcpyToSymbol(xGPU, &x, sizeof(x)));
-        CUDA_CHECK(cudaMemcpyToSymbol(yGPU, &y, sizeof(y)));
-        CUDA_CHECK(cudaMemcpyToSymbol(zGPU, &z, sizeof(z)));
+        PBRT_COPY_TO_SYMBOL(xGPU, &x, sizeof(x));
+        PBRT_COPY_TO_SYMBOL(yGPU, &y, sizeof(y));
+        PBRT_COPY_TO_SYMBOL(zGPU, &z, sizeof(z));
     }
 #endif
 

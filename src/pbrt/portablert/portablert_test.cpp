@@ -36,6 +36,15 @@ struct ScaleTask {
     int *table;
 };
 
+struct ProbeOptions {
+    int useGPU;
+    float scale;
+};
+
+struct OptionsProbeTask {
+    int *result;
+};
+
 static int failures = 0;
 
 static void Check(const char *what, bool ok) {
@@ -91,16 +100,40 @@ static bool TestNamedKernel(prt::Backend *backend, size_t N) {
         argOK &= atable[i] == (i < int(N) ? i : 0);
     Check("argument-pointer writes", argOK);
 
+    // Registered-pointer global: the blob holds a pointer into shared
+    // memory; device code dereferences it (pbrt's Options pattern).
+    ProbeOptions *sharedOptions =
+        reinterpret_cast<ProbeOptions *>(backend->shared_malloc(sizeof(ProbeOptions)));
+    sharedOptions->useGPU = backend->name() != "CPU";
+    sharedOptions->scale = 0.5f;
+    backend->global_copy_to("prt_probe_options", &sharedOptions, sizeof(sharedOptions));
+
+    int *probeResult = reinterpret_cast<int *>(backend->device_malloc(8 * sizeof(int)));
+    OptionsProbeTask probeTask{probeResult};
+    std::vector<unsigned char> probeOut(8, 0);
+    backend->parallel_invoke("options_probe", 8, probeOut, &probeTask, sizeof(probeTask));
+    backend->sync();
+
+    int seen[8];
+    backend->device_copy_from(seen, probeResult, 8 * sizeof(int));
+    bool optsOK = true;
+    for (int i = 0; i < 8; ++i)
+        optsOK &= seen[i] == sharedOptions->useGPU;
+    Check("registered-pointer global read", optsOK);
+
+    backend->device_free(probeResult);
     backend->device_free(d_in);
     backend->device_free(d_out);
     backend->device_free(d_table);
-    return ok && tableOK && argOK;
+    return ok && tableOK && argOK && optsOK;
 }
 
 int main(int argc, char **argv) {
     bool wantSYCL = argc > 1 && std::strcmp(argv[1], "--sycl") == 0;
 
-    prt::kernelapi_init({{"gl_a", sizeof(float)}, {"gl_table", sizeof(gl_table)}});
+    prt::kernelapi_init({{"gl_a", sizeof(float)},
+                         {"gl_table", sizeof(gl_table)},
+                         {"prt_probe_options", sizeof(void *)}});
 
     for (prt::Backend *backend : prt::available_backends()) {
         bool isSYCL = backend->name() != "CPU";

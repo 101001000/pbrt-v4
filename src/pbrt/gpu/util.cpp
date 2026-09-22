@@ -37,6 +37,29 @@ void GPUInit() {
             candidate = backend;
 
     if (candidate != nullptr) {
+        // Globals consumed by the integrated kernels; registered before the
+        // backend initializes so that they get blob slots. The first group
+        // must match the kernel TU's generated layout order (referenced
+        // globals in sorted order, __traversable implicitly first); the rest
+        // are uploaded by their owners through PBRT_COPY_TO_SYMBOL.
+        prt::kernelapi_init({
+            {"gl_a", sizeof(float)},              // referenced by kernels.cpp
+            {"gl_table", 64 * sizeof(int)},       // referenced by kernels.cpp
+            {"prt_probe_options", sizeof(void *)} // referenced by kernels.cpp
+            ,
+            {"Options", sizeof(void *)},
+            {"LOGGING_LogLevelGPU", sizeof(int)},
+            {"xGPU", sizeof(void *)},
+            {"yGPU", sizeof(void *)},
+            {"zGPU", sizeof(void *)},
+            {"RGBColorSpace_sRGB", sizeof(void *)},
+            {"RGBColorSpace_DCI_P3", sizeof(void *)},
+            {"RGBColorSpace_Rec2020", sizeof(void *)},
+            {"RGBColorSpace_ACES2065_1", sizeof(void *)},
+            {"allTriangleMeshesGPU", sizeof(void *)},
+            {"allBilinearMeshesGPU", sizeof(void *)},
+        });
+
         try {
             candidate->shutdown();
             candidate->init();
@@ -60,6 +83,12 @@ void GPUInit() {
     LOG_VERBOSE("portableRT backend %s (%s), BVH layout %s", selectedBackend->name().c_str(),
                 selectedBackend->device_name().c_str(),
                 selectedBackend->get_bvh_layout()->name.c_str());
+}
+
+void PRTCopyToSymbol(const char *name, const void *src, size_t size) {
+    if (selectedBackend == nullptr)
+        LOG_FATAL("PBRT_COPY_TO_SYMBOL before GPUInit: %s", name);
+    selectedBackend->global_copy_to(name, src, size);
 }
 
 void GPUThreadInit() {}

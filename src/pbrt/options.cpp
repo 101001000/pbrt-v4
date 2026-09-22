@@ -4,9 +4,12 @@
 
 #include <pbrt/options.h>
 
-#if defined(PBRT_BUILD_GPU_RENDERER)
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/util.h>
 #endif  // PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_PORTABLERT)
+#include <portableRT/portableRT.hpp>
+#endif
 #include <pbrt/util/print.h>
 
 namespace pbrt {
@@ -17,7 +20,18 @@ PBRTOptions *Options;
 __constant__ BasicPBRTOptions OptionsGPU;
 
 void CopyOptionsToGPU() {
-    CUDA_CHECK(cudaMemcpyToSymbol(OptionsGPU, Options, sizeof(OptionsGPU)));
+    PBRT_COPY_TO_SYMBOL(OptionsGPU, Options, sizeof(OptionsGPU));
+}
+#elif defined(PBRT_BUILD_PORTABLERT)
+void CopyOptionsToGPU() {
+    // Device code dereferences pbrt::Options through the registered global
+    // pointer, so the options must live in shared memory. construction into
+    // the raw shared allocation (assignment would inspect an
+    // uninitialized std::string).
+    PBRTOptions *shared =
+        reinterpret_cast<PBRTOptions *>(PRTBackend()->shared_malloc(sizeof(PBRTOptions)));
+    new (shared) PBRTOptions(*Options);
+    PBRT_COPY_TO_SYMBOL(Options, &shared, sizeof(shared));
 }
 #endif
 

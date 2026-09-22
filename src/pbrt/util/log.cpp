@@ -5,7 +5,7 @@
 #include <pbrt/util/log.h>
 
 #include <pbrt/options.h>
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/util.h>
 #endif
 #include <pbrt/util/check.h>
@@ -91,7 +91,11 @@ FILE *logFile;
 
 #ifdef PBRT_BUILD_GPU_RENDERER
 __constant__ LogLevel LOGGING_LogLevelGPU;
+#elif defined(PBRT_BUILD_PORTABLERT)
+LogLevel LOGGING_LogLevelGPU;
+#endif
 
+#ifdef PBRT_BUILD_GPU_RENDERER
 #define MAX_LOG_ITEMS 1024
 PBRT_GPU GPULogItem rawLogItems[MAX_LOG_ITEMS];
 PBRT_GPU int nRawLogItems;
@@ -120,10 +124,10 @@ void InitLogging(LogLevel level, std::string logFile, bool logUtilization, bool 
     if (level == LogLevel::Invalid)
         ErrorExit("Invalid --log-level specified.");
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     if (useGPU)
-        CUDA_CHECK(cudaMemcpyToSymbol(LOGGING_LogLevelGPU, &logging::logLevel,
-                                      sizeof(logging::logLevel)));
+        PBRT_COPY_TO_SYMBOL(LOGGING_LogLevelGPU, &logging::logLevel,
+                            sizeof(logging::logLevel));
 #endif
 
     if (logUtilization) {

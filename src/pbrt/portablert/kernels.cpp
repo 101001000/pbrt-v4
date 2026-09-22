@@ -21,7 +21,16 @@
 // KernelGlobals view; their host-side definitions provide the storage that
 // global_copy_to uploads from.
 extern float gl_a;
-extern int gl_table[8];
+extern int gl_table[64];
+
+// Pointed-to options living in shared memory: pbrt's registered "Options"
+// global holds a pointer that device code dereferences (see
+// CopyOptionsToGPU). prt_probe_options mirrors that pattern for the tests.
+struct ProbeOptions {
+    int useGPU;
+    float scale;
+};
+extern ProbeOptions *prt_probe_options;
 
 // ---- Named kernel with a trivially-copyable task struct ----------------
 struct ScaleTask {
@@ -40,6 +49,17 @@ prt_kernel void scale_task(ScaleTask t) {
         gl_table[global_idx] = (int)global_idx + 100;
     if (global_idx < 8)
         t.table[global_idx] = (int)global_idx;
+}
+
+// Registered-pointer global dereference: the blob holds a pointer into
+// shared memory, exactly like pbrt's Options handling.
+struct OptionsProbeTask {
+    int *result;
+};
+
+prt_kernel void options_probe(OptionsProbeTask t) {
+    if (global_idx < 8)
+        t.result[global_idx] = prt_probe_options->useGPU;
 }
 
 // Intersection kernel: links the __traversable machinery into this TU. pbrt

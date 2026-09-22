@@ -65,7 +65,7 @@ class RGBColorSpace {
     const RGBToSpectrumTable *rgbToSpectrumTable;
 };
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 extern PBRT_CONST RGBColorSpace *RGBColorSpace_sRGB;
 extern PBRT_CONST RGBColorSpace *RGBColorSpace_DCI_P3;
 extern PBRT_CONST RGBColorSpace *RGBColorSpace_Rec2020;

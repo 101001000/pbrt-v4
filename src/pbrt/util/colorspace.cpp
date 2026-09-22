@@ -4,14 +4,14 @@
 
 #include <pbrt/util/colorspace.h>
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/util.h>
 #endif
 #include <pbrt/options.h>
 
 namespace pbrt {
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 PBRT_CONST RGBColorSpace *RGBColorSpace_sRGB;
 PBRT_CONST RGBColorSpace *RGBColorSpace_DCI_P3;
 PBRT_CONST RGBColorSpace *RGBColorSpace_Rec2020;
@@ -94,17 +94,17 @@ void RGBColorSpace::Init(Allocator alloc) {
     ACES2065_1 = alloc.new_object<RGBColorSpace>(
         Point2f(.7347, .2653), Point2f(0., 1.), Point2f(.0001, -.077),
         GetNamedSpectrum("illum-acesD60"), RGBToSpectrumTable::ACES2065_1, alloc);
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     if (Options->useGPU) {
-        CUDA_CHECK(cudaMemcpyToSymbol(RGBColorSpace_sRGB, &RGBColorSpace::sRGB,
-                                      sizeof(RGBColorSpace_sRGB)));
-        CUDA_CHECK(cudaMemcpyToSymbol(RGBColorSpace_DCI_P3, &RGBColorSpace::DCI_P3,
-                                      sizeof(RGBColorSpace_DCI_P3)));
-        CUDA_CHECK(cudaMemcpyToSymbol(RGBColorSpace_Rec2020, &RGBColorSpace::Rec2020,
-                                      sizeof(RGBColorSpace_Rec2020)));
-        CUDA_CHECK(cudaMemcpyToSymbol(RGBColorSpace_ACES2065_1,
-                                      &RGBColorSpace::ACES2065_1,
-                                      sizeof(RGBColorSpace_ACES2065_1)));
+        PBRT_COPY_TO_SYMBOL(RGBColorSpace_sRGB, &RGBColorSpace::sRGB,
+                            sizeof(RGBColorSpace_sRGB));
+        PBRT_COPY_TO_SYMBOL(RGBColorSpace_DCI_P3, &RGBColorSpace::DCI_P3,
+                            sizeof(RGBColorSpace_DCI_P3));
+        PBRT_COPY_TO_SYMBOL(RGBColorSpace_Rec2020, &RGBColorSpace::Rec2020,
+                            sizeof(RGBColorSpace_Rec2020));
+        PBRT_COPY_TO_SYMBOL(RGBColorSpace_ACES2065_1,
+                            &RGBColorSpace::ACES2065_1,
+                            sizeof(RGBColorSpace_ACES2065_1));
     }
 #endif
 }

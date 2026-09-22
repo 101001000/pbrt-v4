@@ -83,6 +83,13 @@ void InitPBRT(const PBRTOptions &opt) {
     if (Options->quiet)
         SuppressErrorMessages();
 
+#if defined(PBRT_BUILD_PORTABLERT)
+    if (Options->useGPU) {
+        // The backend must be selected before any module uploads
+        // kernel-visible globals (InitLogging copies the log level).
+        GPUInit();
+    }
+#endif
     InitLogging(opt.logLevel, opt.logFile, opt.logUtilization, Options->useGPU);
 
     // General \pbrt Initialization
@@ -109,7 +116,7 @@ void InitPBRT(const PBRTOptions &opt) {
         Triangle::Init(alloc);
         BilinearPatch::Init(alloc);
 #elif defined(PBRT_BUILD_PORTABLERT)
-        GPUInit();
+        CopyOptionsToGPU();
 
         // Leak this so memory it allocates isn't freed
         pstd::pmr::monotonic_buffer_resource *bufferResource =

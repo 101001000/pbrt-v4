@@ -924,14 +924,18 @@ endif ()
 
 target_compile_options (pbrt_lib PUBLIC ${PBRT_CXX_FLAGS})
 
-target_link_libraries (pbrt_lib PRIVATE OpenEXR::OpenEXR pbrt_warnings pbrt_opt $<$<BOOL:PBRT_CUDA_ENABLED>:cuda_build_configuration>)
+target_link_libraries (pbrt_lib OpenEXR::OpenEXR pbrt_warnings pbrt_opt $<$<BOOL:PBRT_CUDA_ENABLED>:cuda_build_configuration>)
 
 if (PBRT_BUILD_PORTABLERT)
-  target_link_libraries (pbrt_lib PRIVATE portableRT::portableRT)
+  # Plain-signature linking: prt_set_kernels adds the localized kernel
+  # libraries through the same interface.
+  target_link_libraries (pbrt_lib portableRT::portableRT)
   target_sources (pbrt_lib PRIVATE
     src/pbrt/gpu/memory.cpp
     src/pbrt/gpu/util.cpp
   )
+  prt_set_kernels (pbrt_lib src/pbrt/portablert/kernels.cpp)
+  prt_add_sycl_runtime_libraries (pbrt_lib)
 endif ()
 
 add_sanitizers (pbrt_lib)

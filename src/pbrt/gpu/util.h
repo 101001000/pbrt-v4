@@ -31,6 +31,15 @@ namespace pbrt {
 // The backend selected by GPUInit(); null before GPUInit.
 prt::Backend *PRTBackend();
 
+// Uploads size bytes from src into the kernel-visible global named name,
+// which GPUInit has registered.
+void PRTCopyToSymbol(const char *name, const void *src, size_t size);
+
+// GPUInit registers the kernel-visible globals with this table; keep it in
+// sync with the extern declarations in the kernel translation unit.
+#define PBRT_COPY_TO_SYMBOL(name, src, size) \
+    pbrt::PRTCopyToSymbol(#name, src, size)
+
 void GPUInit();
 void GPUThreadInit();
 
@@ -75,6 +84,10 @@ void GPUMemset(void *ptr, int byte, size_t bytes);
 namespace pbrt {
 
 std::pair<cudaEvent_t, cudaEvent_t> GetProfilerEvents(const char *description);
+
+// Uploads size bytes from src into the __constant__ symbol name.
+#define PBRT_COPY_TO_SYMBOL(name, src, size) \
+    CUDA_CHECK(cudaMemcpyToSymbol(name, src, size))
 
 template <typename F>
 inline int GetBlockSize(const char *description, F kernel) {

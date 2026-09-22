@@ -83,6 +83,10 @@ cmake --build build-cpu-reference -j 16 --target pbrt_test
 - [x] C03: CUDAMemoryResource/CUDATrackedMemoryResource over shared_malloc;
   `--gpu` drives the portableRT runtime; wavefront launches execute on the
   host and render bit-identically to the reference `--wavefront` output
+- [x] C04: kernel-visible globals through PBRT_COPY_TO_SYMBOL
+  (Options / log level / spectra / color spaces / mesh vectors registered in
+  GPUInit and uploaded by their owner modules; verified with the
+  registered-pointer global read test on CPU and SYCL)
 - [ ] C02: runtime initialization through the existing GPU path
 - [ ] C03: memory allocation and transfer adapters
 - [ ] C04: device globals preserved and initialized

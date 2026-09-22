@@ -67,6 +67,8 @@ extern __constant__ BasicPBRTOptions OptionsGPU;
 #endif  // __CUDACC__
 
 void CopyOptionsToGPU();
+#elif defined(PBRT_BUILD_PORTABLERT)
+void CopyOptionsToGPU();
 #endif  // PBRT_BUILD_GPU_RENDERER
 
 // Options Inline Functions
