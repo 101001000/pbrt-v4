@@ -77,6 +77,7 @@ cmake --build build-cpu-reference -j 16 --target pbrt_test
 ## Status
 
 - [x] C01: build integration (installed portableRT discovery, link, CUDA disabled)
+- [x] C05 (probe): named-kernel launch mechanism validated on CPU and SYCL
 - [ ] C02: runtime initialization through the existing GPU path
 - [ ] C03: memory allocation and transfer adapters
 - [ ] C04: device globals preserved and initialized
@@ -84,6 +85,35 @@ cmake --build build-cpu-reference -j 16 --target pbrt_test
 - [ ] C06-C14: wavefront stages, intersections, textures, evaluation
 
 ## Recorded results
+
+### C01 / kernel-launch feasibility probe
+
+`pbrt_portablert_test` (build target `pbrt_portablert_test`, sources in
+`src/pbrt/portablert/`) validates the launch mechanism that the portableRT
+backend will use:
+
+```sh
+cmake --build build-portablert --target pbrt_portablert_test
+LD_LIBRARY_PATH=../portableRT/build/install/lib ./build-portablert/pbrt_portablert_test
+LD_LIBRARY_PATH=../portableRT/build/install/lib ./build-portablert/pbrt_portablert_test --sycl
+```
+
+Findings (validated on CPU and SYCL/Intel Arc A770, work sizes 1/7/8/9/19/64):
+
+- pbrt's generic callables map to portableRT through **named kernels taking
+  one trivially-copyable task struct** that mirrors the lambda captures; the
+  host packs the struct and calls `parallel_invoke(name, n, out, &args, size)`.
+- A function-pointer bridge was evaluated and **rejected**: the SYCL compiler
+  rejects calls through function pointers.
+- The kernel TU must contain the intersection machinery (`probe_intersect`
+  calls `prt::closest_hit`) so that the generated `__traversable` slot matches
+  the host-side registry, which always registers it first. Layout agreement:
+  `__traversable` @0, then registered globals in sorted order, 16-byte slots.
+- Only 3 launch-boundary sites (integrator.h `ParallelFor`/`Do`,
+  workqueue.h `ForAllQueued`) carry all wavefront lambdas.
+- Keyed-up tests passed: named kernel with task struct, runtime-indexed
+  globals, argument-pointer writes, on CPU and SYCL, for non-block-multiple
+  sizes.
 
 ### C01
 

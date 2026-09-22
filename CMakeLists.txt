@@ -1159,6 +1159,17 @@ add_test (pbrt_unit_test pbrt_test)
 
 set_property (TARGET pbrt_test PROPERTY FOLDER "cmd")
 
+######################
+# portableRT focused tests
+
+if (PBRT_BUILD_PORTABLERT)
+  add_executable (pbrt_portablert_test src/pbrt/portablert/portablert_test.cpp)
+  target_include_directories (pbrt_portablert_test PRIVATE src src/ext)
+  target_link_libraries (pbrt_portablert_test portableRT::portableRT)
+  prt_set_kernels (pbrt_portablert_test src/pbrt/portablert/kernels.cpp)
+  prt_add_sycl_runtime_libraries (pbrt_portablert_test)
+endif ()
+
 ###############################
 # Installation
 
