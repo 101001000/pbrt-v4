@@ -161,7 +161,7 @@ WavefrontPathIntegrator::WavefrontPathIntegrator(
         CHECK(mr);
         aggregate = new OptiXAggregate(scene, mr, textures, shapeIndexToAreaLights, media,
                                        namedMaterials, materials);
-#elif defined(PBRT_BUILD_PORTABLERT)
+#elif defined(PBRT_BUILD_PORTABLERT) || defined(PRT_KERNEL)
         // The portableRT backend takes over aggregation and traversal in a
         // later step; the CPU aggregate keeps --gpu renders correct meanwhile.
         aggregate = new CPUAggregate(scene, textures, shapeIndexToAreaLights, media,

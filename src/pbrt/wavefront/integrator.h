@@ -14,9 +14,9 @@
 #include <pbrt/base/light.h>
 #include <pbrt/base/lightsampler.h>
 #include <pbrt/base/sampler.h>
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/util.h>
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif  // defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/options.h>
 #include <pbrt/util/parallel.h>
 #include <pbrt/util/pstd.h>
@@ -96,7 +96,11 @@ class WavefrontPathIntegrator {
 #elif defined(PBRT_BUILD_PORTABLERT)
             // The portableRT launch adapters land in a later step; host
             // execution keeps --gpu renders correct meanwhile.
-            pbrt::ParallelFor(0, nItems, func);
+            if(strcmp(description, "Update film") == 0) {
+                GPUParallelFor(description, nItems, func);
+            } else {
+                pbrt::ParallelFor(0, nItems, func);
+            }
 #else
             LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");
 #endif
@@ -109,7 +113,7 @@ class WavefrontPathIntegrator {
         if (Options->useGPU)
 #ifdef PBRT_BUILD_GPU_RENDERER
             GPUParallelFor(description, 1, [=] PBRT_GPU(int) mutable { func(); });
-#elif defined(PBRT_BUILD_PORTABLERT)
+#elif defined(PBRT_BUILD_PORTABLERT) || defined(PRT_KERNEL)
             func();
 #else
             LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");

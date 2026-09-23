@@ -19,12 +19,7 @@
 #include <vector>
 
 #ifdef PBRT_BUILD_PORTABLERT
-
-// portableRT flavor: entry points with the same names as the CUDA build, but
-// implemented over the portableRT runtime (src/pbrt/gpu/util.cpp).
-namespace prt {
-class Backend;
-}
+#include <portableRT/portableRT.hpp>
 
 namespace pbrt {
 
@@ -46,6 +41,38 @@ void GPUThreadInit();
 void GPUWait();
 
 void GPUMemset(void *ptr, int byte, size_t bytes);
+
+template <typename F>
+void GPUParallelFor(const char *description, int nItems, F func);
+
+template <typename F>
+void GPUParallelFor(const char *description, int nItems, F func) {
+
+    std::cout << "Invoking parallel for: " << description << std::endl;
+#ifdef PBRT_DEBUG_BUILD
+    LOG_VERBOSE("Launching %s", description);
+#endif
+    auto make_kernel_name = [](const char* description) {
+        std::string result(description);
+        result.erase(
+            std::remove(result.begin(), result.end(), ' '),
+            result.end()
+        );
+        result += "PRTKernel";
+        return result;
+    };
+    std::vector<unsigned char> dummy_output(0);
+    struct EmptyArgs {};
+    EmptyArgs args{};
+    PRTBackend()->parallel_invoke_async(make_kernel_name(description), nItems, dummy_output, &args, sizeof(args), 0);
+
+    std::cout << "Invoked parallel for: " << description << std::endl;
+#ifdef PBRT_DEBUG_BUILD
+    PRTBackend()->sync();
+        std::cout << "Sync parallel for: " << description << std::endl;
+    LOG_VERBOSE("Post-sync %s", description);
+#endif
+}
 
 }  // namespace pbrt
 

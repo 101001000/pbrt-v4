@@ -18,7 +18,7 @@ namespace pbrt {
 
 void PrintStackTrace();
 
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) || defined(PRT_KERNEL)
 
 #define CHECK(x) assert(x)
 #define CHECK_IMPL(a, b, op) assert((a)op(b))

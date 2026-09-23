@@ -387,7 +387,7 @@ class DenselySampledSpectrum {
     SampledSpectrum Sample(const SampledWavelengths &lambda) const {
         SampledSpectrum s;
         for (int i = 0; i < NSpectrumSamples; ++i) {
-            int offset = std::lround(lambda[i]) - lambda_min;
+            int offset = (lambda[i]) - lambda_min;
             if (offset < 0 || offset >= values.size())
                 s[i] = 0;
             else
@@ -431,7 +431,7 @@ class DenselySampledSpectrum {
     PBRT_CPU_GPU
     Float operator()(Float lambda) const {
         DCHECK_GT(lambda, 0);
-        int offset = std::lround(lambda) - lambda_min;
+        int offset = (lambda) - lambda_min;
         if (offset < 0 || offset >= values.size())
             return 0;
         return values[offset];
@@ -631,7 +631,7 @@ class RGBIlluminantSpectrum {
 PBRT_CPU_GPU inline SampledSpectrum SafeDiv(SampledSpectrum a, SampledSpectrum b) {
     SampledSpectrum r;
     for (int i = 0; i < NSpectrumSamples; ++i)
-        r[i] = (b[i] != 0) ? a[i] / b[i] : 0.;
+        r[i] = (b[i] != 0) ? a[i] / b[i] : 0.f;
     return r;
 }
 

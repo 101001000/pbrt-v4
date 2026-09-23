@@ -7,10 +7,50 @@
 #include <pbrt/film.h>
 #include <pbrt/wavefront/integrator.h>
 
+pbrt::WavefrontPathIntegrator* g_integrator;
+
+#ifdef PRT_KERNEL
+prt_kernel void UpdatefilmPRTKernel(){
+
+    auto hit = prt::closest_hit(prt::Ray());
+    int pixelIndex = global_idx;
+
+    // Check pixel against film bounds
+    pbrt::Point2i pPixel = g_integrator->pixelSampleState.pPixel[pixelIndex];
+    if (!InsideExclusive(pPixel, g_integrator->film.PixelBounds()))
+        return;
+
+    // Compute final weighted radiance value
+    pbrt::SampledSpectrum Lw = pbrt::SampledSpectrum(g_integrator->pixelSampleState.L[pixelIndex]) *
+                         g_integrator->pixelSampleState.cameraRayWeight[pixelIndex];
+
+    //PBRT_DBG("Adding Lw %f %f %f %f at pixel (%d, %d)\n", Lw[0], Lw[1], Lw[2],
+    //         Lw[3], pPixel.x, pPixel.y);
+    // Provide sample radiance value to film
+    pbrt::SampledWavelengths lambda = g_integrator->pixelSampleState.lambda[pixelIndex];
+    pbrt::Float filterWeight = g_integrator->pixelSampleState.filterWeight[pixelIndex];
+    if (g_integrator->initializeVisibleSurface) {
+        // Call _Film::AddSample()_ with _VisibleSurface_ for pixel sample
+        pbrt::VisibleSurface visibleSurface =
+            g_integrator->pixelSampleState.visibleSurface[pixelIndex];
+        g_integrator->film.AddSample(pPixel, Lw, lambda, &visibleSurface, filterWeight);
+    } else
+        g_integrator->film.AddSample(pPixel, Lw, lambda, nullptr, filterWeight);
+}
+#else
+
 namespace pbrt {
 
 // WavefrontPathIntegrator Film Methods
 void WavefrontPathIntegrator::UpdateFilm() {
+    std::cout << "allocating device memory for WavefrontPathIntegrator" << std::endl;
+    WavefrontPathIntegrator *d_integrator =
+        static_cast<WavefrontPathIntegrator *>(PRTBackend()->device_malloc(sizeof(WavefrontPathIntegrator)));
+    std::cout << "Copying to device" << std::endl;
+    PRTBackend()->device_copy_to(d_integrator, this, sizeof(*this));
+    std::cout << "Copying to globals" << std::endl;
+    PBRT_COPY_TO_SYMBOL(g_integrator, &d_integrator, sizeof(d_integrator));
+
     ParallelFor(
         "Update film", maxQueueSize, PBRT_CPU_GPU_LAMBDA(int pixelIndex) {
             // Check pixel against film bounds
@@ -39,3 +79,4 @@ void WavefrontPathIntegrator::UpdateFilm() {
 }
 
 }  // namespace pbrt
+#endif

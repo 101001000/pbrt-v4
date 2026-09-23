@@ -15,8 +15,8 @@
 #include <vector>
 
 #ifdef PBRT_BUILD_PORTABLERT
-
 #include <portableRT/portableRT.hpp>
+#include <pbrt/wavefront/integrator.h>
 
 namespace pbrt {
 
@@ -43,21 +43,7 @@ void GPUInit() {
         // globals in sorted order, __traversable implicitly first); the rest
         // are uploaded by their owners through PBRT_COPY_TO_SYMBOL.
         prt::kernelapi_init({
-            {"gl_a", sizeof(float)},              // referenced by kernels.cpp
-            {"gl_table", 64 * sizeof(int)},       // referenced by kernels.cpp
-            {"prt_probe_options", sizeof(void *)} // referenced by kernels.cpp
-            ,
-            {"Options", sizeof(void *)},
-            {"LOGGING_LogLevelGPU", sizeof(int)},
-            {"xGPU", sizeof(void *)},
-            {"yGPU", sizeof(void *)},
-            {"zGPU", sizeof(void *)},
-            {"RGBColorSpace_sRGB", sizeof(void *)},
-            {"RGBColorSpace_DCI_P3", sizeof(void *)},
-            {"RGBColorSpace_Rec2020", sizeof(void *)},
-            {"RGBColorSpace_ACES2065_1", sizeof(void *)},
-            {"allTriangleMeshesGPU", sizeof(void *)},
-            {"allBilinearMeshesGPU", sizeof(void *)},
+            {"g_integrator", sizeof(pbrt::WavefrontPathIntegrator*)}
         });
 
         try {

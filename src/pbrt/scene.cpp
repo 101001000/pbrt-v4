@@ -6,9 +6,9 @@
 
 #include <pbrt/cpu/aggregates.h>
 #include <pbrt/cpu/integrators.h>
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/memory.h>
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif  // defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/materials.h>
 #include <pbrt/options.h>
 #include <pbrt/paramdict.h>
@@ -82,7 +82,7 @@ STAT_COUNTER("Scene/Object instances used", nObjectInstancesUsed);
 // BasicSceneBuilder Method Definitions
 BasicSceneBuilder::BasicSceneBuilder(BasicScene *scene)
     : scene(scene)
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
       ,
       transformCache(Options->useGPU ? Allocator(&CUDATrackedMemoryResource::singleton)
                                      : Allocator())
@@ -569,9 +569,9 @@ void BasicSceneBuilder::Option(const std::string &name, const std::string &value
     } else
         ErrorExitDeferred(&loc, "%s: unknown option", name);
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     CopyOptionsToGPU();
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif  // defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 }
 
 void BasicSceneBuilder::Transform(Float tr[16], FileLoc loc) {
@@ -860,7 +860,7 @@ std::unique_ptr<Integrator> BasicScene::CreateIntegrator(
 BasicScene::BasicScene()
     : threadAllocators([]() {
           pstd::pmr::memory_resource *baseResource = pstd::pmr::get_default_resource();
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
           if (Options->useGPU)
               baseResource = &CUDATrackedMemoryResource::singleton;
 #endif

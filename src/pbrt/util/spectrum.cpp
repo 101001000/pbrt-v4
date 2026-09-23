@@ -2571,7 +2571,9 @@ namespace Spectra {
 #if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 PBRT_GPU DenselySampledSpectrum *xGPU, *yGPU, *zGPU;
 #endif
-DenselySampledSpectrum *x, *y, *z;
+DenselySampledSpectrum *x;
+DenselySampledSpectrum *y;
+DenselySampledSpectrum *z;
 
 namespace {
 

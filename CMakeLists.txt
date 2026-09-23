@@ -924,7 +924,18 @@ endif ()
 
 target_compile_options (pbrt_lib PUBLIC ${PBRT_CXX_FLAGS})
 
-target_link_libraries (pbrt_lib OpenEXR::OpenEXR pbrt_warnings pbrt_opt $<$<BOOL:PBRT_CUDA_ENABLED>:cuda_build_configuration>)
+target_link_libraries(
+    pbrt_lib
+    OpenEXR::OpenEXR
+    pbrt_warnings
+    pbrt_opt
+    Ptex_static
+    double-conversion
+    glfw
+    glad
+    OpenGL::GL
+    $<$<BOOL:PBRT_CUDA_ENABLED>:cuda_build_configuration>
+)
 
 if (PBRT_BUILD_PORTABLERT)
   # Plain-signature linking: prt_set_kernels adds the localized kernel
@@ -935,7 +946,7 @@ if (PBRT_BUILD_PORTABLERT)
     src/pbrt/gpu/util.cpp
   )
   prt_set_kernels (pbrt_lib src/pbrt/portablert/kernels.cpp)
-  prt_add_sycl_runtime_libraries (pbrt_lib)
+  #prt_add_sycl_runtime_libraries (pbrt_lib)
 endif ()
 
 add_sanitizers (pbrt_lib)
@@ -1085,7 +1096,14 @@ add_executable (pbrt::nanovdb2pbrt ALIAS nanovdb2pbrt)
 target_compile_definitions (nanovdb2pbrt PRIVATE ${PBRT_DEFINITIONS})
 target_compile_options (nanovdb2pbrt PUBLIC ${PBRT_CXX_FLAGS})
 target_include_directories (nanovdb2pbrt PUBLIC src src/ext)
-target_link_libraries (nanovdb2pbrt PRIVATE ${ALL_PBRT_LIBS} pbrt_warnings pbrt_opt)
+target_link_libraries(
+    nanovdb2pbrt
+    PRIVATE
+    ${ALL_PBRT_LIBS}
+    pbrt_warnings
+    pbrt_opt
+    ${ALL_PBRT_LIBS}
+)
 
 set_target_properties (nanovdb2pbrt PROPERTIES OUTPUT_NAME nanovdb2pbrt)
 
@@ -1171,11 +1189,11 @@ set_property (TARGET pbrt_test PROPERTY FOLDER "cmd")
 # portableRT focused tests
 
 if (PBRT_BUILD_PORTABLERT)
-  add_executable (pbrt_portablert_test src/pbrt/portablert/portablert_test.cpp)
-  target_include_directories (pbrt_portablert_test PRIVATE src src/ext)
-  target_link_libraries (pbrt_portablert_test portableRT::portableRT)
-  prt_set_kernels (pbrt_portablert_test src/pbrt/portablert/kernels.cpp)
-  prt_add_sycl_runtime_libraries (pbrt_portablert_test)
+  #add_executable (pbrt_portablert_test src/pbrt/portablert/portablert_test.cpp)
+  #target_include_directories (pbrt_portablert_test PRIVATE src src/ext)
+  #target_link_libraries (pbrt_portablert_test portableRT::portableRT)
+  #prt_set_kernels (pbrt_portablert_test src/pbrt/portablert/kernels.cpp)
+  #prt_add_sycl_runtime_libraries (pbrt_portablert_test)
 endif ()
 
 ###############################
