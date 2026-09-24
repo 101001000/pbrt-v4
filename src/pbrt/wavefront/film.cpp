@@ -7,8 +7,6 @@
 #include <pbrt/film.h>
 #include <pbrt/wavefront/integrator.h>
 
-pbrt::WavefrontPathIntegrator* g_integrator;
-
 #ifdef PRT_KERNEL
 
 prt_kernel void dummy(){

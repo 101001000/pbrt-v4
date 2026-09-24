@@ -12,6 +12,9 @@
 #include <pbrt/gpu/optix/aggregate.h>
 #include <pbrt/gpu/memory.h>
 #endif  // PBRT_BUILD_GPU_RENDERER
+#ifdef PBRT_BUILD_PORTABLERT
+#include <pbrt/gpu/memory.h>
+#endif  // PBRT_BUILD_PORTABLERT
 #include <pbrt/lights.h>
 #include <pbrt/lightsamplers.h>
 #include <pbrt/util/color.h>
@@ -39,6 +42,14 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #endif  // PBRT_BUILD_GPU_RENDERER
+
+#ifdef PRT_KERNEL
+prt_kernel void ResetrayqueueKernel(){
+    pbrt::RayQueue *cameraRayQueue = g_integrator->CurrentRayQueue(0);
+    //PBRT_DBG("Starting scanlines at y0 = %d, sample %d / %d\n", y0, sampleIndex, samplesPerPixel);
+    cameraRayQueue->Reset();
+}
+#endif
 
 namespace pbrt {
 

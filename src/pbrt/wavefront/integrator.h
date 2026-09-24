@@ -53,6 +53,19 @@ class WavefrontAggregate {
         int maxRays, SubsurfaceScatterQueue *subsurfaceScatterQueue) const = 0;
 };
 
+static bool IsPortableRTKernel(const char *description) {
+    static constexpr const char *portedKernels[] = {
+        "Update film",
+        "Reset ray queue",
+    };
+
+    for (const char *kernel : portedKernels)
+        if (strcmp(description, kernel) == 0)
+            return true;
+
+    return false;
+}
+
 // WavefrontPathIntegrator Definition
 class WavefrontPathIntegrator {
   public:
@@ -96,7 +109,7 @@ class WavefrontPathIntegrator {
 #elif defined(PBRT_BUILD_PORTABLERT)
             // The portableRT launch adapters land in a later step; host
             // execution keeps --gpu renders correct meanwhile.
-            if(strcmp(description, "Update film") == 0) {
+            if(IsPortableRTKernel(description)){
                 GPUParallelFor(description, nItems, func);
             } else {
                 std::cout << "Pending ParallelFor kernel to port: " << description << std::endl;
@@ -116,8 +129,12 @@ class WavefrontPathIntegrator {
 #ifdef PBRT_BUILD_GPU_RENDERER
             GPUParallelFor(description, 1, [=] PBRT_GPU(int) mutable { func(); }); }
 #elif defined(PBRT_BUILD_PORTABLERT) || defined(PRT_KERNEL)
-            std::cout << "Pending Do kernel to port: " << description << std::endl;
-            func(); }
+            if(IsPortableRTKernel(description)){
+                GPUParallelFor(description, 1, [=] PBRT_GPU(int) mutable { func(); });
+            } else {
+                std::cout << "Pending Do kernel to port: " << description << std::endl;
+                func();
+            }}
 #else
             LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled"); }
 #endif
