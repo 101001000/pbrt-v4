@@ -293,6 +293,10 @@ WavefrontPathIntegrator::WavefrontPathIntegrator(
 
 // WavefrontPathIntegrator Method Definitions
 Float WavefrontPathIntegrator::Render() {
+
+    WavefrontPathIntegrator *integratorPtr = this;
+    PBRT_COPY_TO_SYMBOL(g_integrator, &integratorPtr, sizeof(integratorPtr)); //TODO: move to constructor?
+
     Bounds2i pixelBounds = film.PixelBounds();
     Vector2i resolution = pixelBounds.Diagonal();
 

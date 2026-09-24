@@ -43,7 +43,10 @@ void GPUInit() {
         // globals in sorted order, __traversable implicitly first); the rest
         // are uploaded by their owners through PBRT_COPY_TO_SYMBOL.
         prt::kernelapi_init({
-            {"g_integrator", sizeof(pbrt::WavefrontPathIntegrator*)}
+            {"g_integrator", sizeof(pbrt::WavefrontPathIntegrator*)},
+            {"x", sizeof(void*)}, // pbrt::Spectra::x (propagated global, see data_sycl.json)
+            {"y", sizeof(void*)}, // pbrt::Spectra::y
+            {"z", sizeof(void*)}  // pbrt::Spectra::z
         });
 
         try {

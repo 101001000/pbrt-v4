@@ -10,9 +10,13 @@
 pbrt::WavefrontPathIntegrator* g_integrator;
 
 #ifdef PRT_KERNEL
+
+prt_kernel void dummy(){
+    auto hit = prt::closest_hit(prt::Ray());
+}
+
 prt_kernel void UpdatefilmPRTKernel(){
 
-    auto hit = prt::closest_hit(prt::Ray());
     int pixelIndex = global_idx;
 
     // Check pixel against film bounds
@@ -43,14 +47,6 @@ namespace pbrt {
 
 // WavefrontPathIntegrator Film Methods
 void WavefrontPathIntegrator::UpdateFilm() {
-    std::cout << "allocating device memory for WavefrontPathIntegrator" << std::endl;
-    WavefrontPathIntegrator *d_integrator =
-        static_cast<WavefrontPathIntegrator *>(PRTBackend()->device_malloc(sizeof(WavefrontPathIntegrator)));
-    std::cout << "Copying to device" << std::endl;
-    PRTBackend()->device_copy_to(d_integrator, this, sizeof(*this));
-    std::cout << "Copying to globals" << std::endl;
-    PBRT_COPY_TO_SYMBOL(g_integrator, &d_integrator, sizeof(d_integrator));
-
     ParallelFor(
         "Update film", maxQueueSize, PBRT_CPU_GPU_LAMBDA(int pixelIndex) {
             // Check pixel against film bounds

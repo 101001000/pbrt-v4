@@ -47,7 +47,6 @@ void GPUParallelFor(const char *description, int nItems, F func);
 
 template <typename F>
 void GPUParallelFor(const char *description, int nItems, F func) {
-
     std::cout << "Invoking parallel for: " << description << std::endl;
 #ifdef PBRT_DEBUG_BUILD
     LOG_VERBOSE("Launching %s", description);
@@ -64,7 +63,7 @@ void GPUParallelFor(const char *description, int nItems, F func) {
     std::vector<unsigned char> dummy_output(0);
     struct EmptyArgs {};
     EmptyArgs args{};
-    PRTBackend()->parallel_invoke_async(make_kernel_name(description), nItems, dummy_output, &args, sizeof(args), 0);
+    PRTBackend()->parallel_invoke(make_kernel_name(description), nItems, dummy_output, &args, sizeof(args), 0); //TODO: Make async?
 
     std::cout << "Invoked parallel for: " << description << std::endl;
 #ifdef PBRT_DEBUG_BUILD
