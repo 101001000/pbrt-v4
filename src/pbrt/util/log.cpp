@@ -332,7 +332,7 @@ std::string ToString(LogLevel level) {
 }
 
 void Log(LogLevel level, const char *file, int line, const char *s) {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
     auto strlen = [](const char *ptr) {
         int len = 0;
         while (*ptr) {
@@ -403,7 +403,7 @@ void Log(LogLevel level, const char *file, int line, const char *s) {
 #endif
 
 void LogFatal(LogLevel level, const char *file, int line, const char *s) {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
     Log(LogLevel::Fatal, file, line, s);
     __threadfence();
     asm("trap;");

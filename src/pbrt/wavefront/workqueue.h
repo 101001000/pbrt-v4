@@ -7,6 +7,10 @@
 
 #include <pbrt/pbrt.h>
 
+#ifdef PBRT_BUILD_PORTABLERT
+#include <pbrt/portablert/atomics.h>
+#endif
+
 #include <pbrt/options.h>
 #ifdef PBRT_BUILD_GPU_RENDERER
 #include <pbrt/gpu/util.h>
@@ -46,10 +50,10 @@ class WorkQueue : public SOA<WorkItem> {
     WorkQueue(int n, Allocator alloc) : SOA<WorkItem>(n, alloc) {}
     WorkQueue &operator=(const WorkQueue &w) {
         SOA<WorkItem>::operator=(w);
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE) && defined(PBRT_USE_LEGACY_CUDA_ATOMICS)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL) && defined(PBRT_USE_LEGACY_CUDA_ATOMICS)
         size = w.size;
-#elif defined(PRT_KERNEL_DEVICE_CODE)
-        //TODO
+#elif defined(PRT_KERNEL)
+        atomic_store_relaxed(&size, atomic_load_relaxed(&w.size));
 #else
         size.store(w.size.load());
 #endif
@@ -58,28 +62,28 @@ class WorkQueue : public SOA<WorkItem> {
 
     PBRT_CPU_GPU
     int Size() const {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
 #ifdef PBRT_USE_LEGACY_CUDA_ATOMICS
         return size; 
 #else
         return size.load(cuda::std::memory_order_relaxed);
 #endif
-#elif defined(PRT_KERNEL_DEVICE_CODE)
-        return 0; //TODO
+#elif defined(PRT_KERNEL)
+        return atomic_load_relaxed(&size);
 #else
         return size.load(std::memory_order_relaxed);
 #endif
     }
     PBRT_CPU_GPU
     void Reset() {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
 #ifdef PBRT_USE_LEGACY_CUDA_ATOMICS
         size = 0;
 #else
         size.store(0, cuda::std::memory_order_relaxed);
 #endif
-#elif defined(PRT_KERNEL_DEVICE_CODE)
-        //TODO
+#elif defined(PRT_KERNEL)
+        atomic_store_relaxed(&size, 0);
 #else
         size.store(0, std::memory_order_relaxed);
 #endif
@@ -96,14 +100,14 @@ class WorkQueue : public SOA<WorkItem> {
     // WorkQueue Protected Methods
     PBRT_CPU_GPU
     int AllocateEntry() {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
 #ifdef PBRT_USE_LEGACY_CUDA_ATOMICS
         return atomicAdd(&size, 1);
 #else
         return size.fetch_add(1, cuda::std::memory_order_relaxed);
 #endif
-#elif defined(PRT_KERNEL_DEVICE_CODE)
-        return 0;
+#elif defined(PRT_KERNEL)
+        return atomic_fetch_add_relaxed(&size, 1);
 #else
         return size.fetch_add(1, std::memory_order_relaxed);
 #endif
@@ -111,13 +115,13 @@ class WorkQueue : public SOA<WorkItem> {
 
   private:
     // WorkQueue Private Members
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
 #ifdef PBRT_USE_LEGACY_CUDA_ATOMICS
     int size = 0;
 #else
     cuda::atomic<int, cuda::thread_scope_device> size{0};
 #endif
-#elif defined(PRT_KERNEL_DEVICE_CODE)
+#elif defined(PRT_KERNEL)
     int size = 0;
 #else
     std::atomic<int> size{0};

@@ -54,7 +54,7 @@ constexpr Float Sqrt2 = 1.41421356237309504880;
 // Bit Operation Inline Functions
 PBRT_CPU_GPU
 inline uint32_t ReverseBits32(uint32_t n) {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
     return __brev(n);
 #else
     n = (n << 16) | (n >> 16);
@@ -68,7 +68,7 @@ inline uint32_t ReverseBits32(uint32_t n) {
 
 PBRT_CPU_GPU
 inline uint64_t ReverseBits64(uint64_t n) {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
     return __brevll(n);
 #else
     uint64_t n0 = ReverseBits32((uint32_t)n);
@@ -399,7 +399,7 @@ inline int Log2Int(double v) {
 }
 
 PBRT_CPU_GPU inline int Log2Int(uint32_t v) {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
     return 31 - __clz(v);
 #elif defined(PBRT_HAS_INTRIN_H)
     unsigned long lz = 0;
@@ -418,7 +418,7 @@ inline int Log2Int(int32_t v) {
 
 PBRT_CPU_GPU
 inline int Log2Int(uint64_t v) {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
     return 64 - __clzll(v);
 #elif defined(PBRT_HAS_INTRIN_H)
     unsigned long lz = 0;
@@ -448,7 +448,7 @@ PBRT_CPU_GPU inline int Log4Int(T v) {
 
 // https://stackoverflow.com/a/10792321
 PBRT_CPU_GPU inline float FastExp(float x) {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
     return __expf(x);
 #else
     // Compute $x'$ such that $\roman{e}^x = 2^{x'}$
@@ -756,7 +756,7 @@ inline int PermutationElement(uint32_t i, uint32_t l, uint32_t p) {
 
 PBRT_CPU_GPU
 inline Float ErfInv(Float a) {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL)
     return erfinv(a);
 #else
     // https://stackoverflow.com/a/49743348

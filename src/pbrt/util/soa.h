@@ -27,7 +27,7 @@ struct alignas(16) Float4 {
 
 PBRT_CPU_GPU
 inline Float4 Load4(const Float4 *p) {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PBRT_FLOAT_AS_DOUBLE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PBRT_FLOAT_AS_DOUBLE) && !defined(PRT_KERNEL)
     float4 v = *(const float4 *)p;
     return {{v.x, v.y, v.z, v.w}};
 #else
@@ -37,7 +37,7 @@ inline Float4 Load4(const Float4 *p) {
 
 PBRT_CPU_GPU
 inline void Store4(Float4 *p, Float4 v) {
-#if defined(PBRT_IS_GPU_CODE) && !defined(PBRT_FLOAT_AS_DOUBLE) && !defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PBRT_FLOAT_AS_DOUBLE) && !defined(PRT_KERNEL)
     *(float4 *)p = make_float4(v.v[0], v.v[1], v.v[2], v.v[3]);
 #else
     *p = v;

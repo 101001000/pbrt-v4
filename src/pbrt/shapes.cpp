@@ -153,7 +153,7 @@ pstd::vector<const TriangleMesh *> *Triangle::allMeshes;
 PBRT_GPU pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
 #endif
 
-#if defined(PBRT_BUILD_PORTABLERT) && defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_BUILD_PORTABLERT) && defined(PRT_KERNEL)
 pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
 #endif
 

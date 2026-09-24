@@ -815,7 +815,7 @@ inline Cylinder::Cylinder(const Transform *renderFromObject,
 #if defined(PBRT_BUILD_GPU_RENDERER) && defined(__CUDACC__)
 extern PBRT_GPU pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
 #endif
-#if defined(PBRT_BUILD_PORTABLERT) && defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PBRT_BUILD_PORTABLERT) && defined(PRT_KERNEL)
 extern pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
 #endif
 

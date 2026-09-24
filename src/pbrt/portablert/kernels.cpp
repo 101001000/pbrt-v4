@@ -1,9 +1,5 @@
 #include <portableRT/kernel/device_common.hpp>
 
-
-
-
-
 #define PBRT_RESTRICT
 #define PBRT_BUILD_PORTABLERT
 

@@ -22,35 +22,7 @@
 #define PBRT_IS_GPU_CODE
 #endif
 
-#if PRT_KERNEL_CUDA
 
-    #if defined(__CUDA_ARCH__)
-        #define PRT_KERNEL_DEVICE_CODE 1
-    #else
-        #undef PRT_KERNEL_DEVICE_CODE
-    #endif
-
-#elif PRT_KERNEL_HIP
-
-    #if defined(__HIP_DEVICE_COMPILE__)
-        #define PRT_KERNEL_DEVICE_CODE 1
-    #else
-        #undef PRT_KERNEL_DEVICE_CODE
-    #endif
-
-#elif PRT_KERNEL_SYCL
-
-    #if defined(__SYCL_DEVICE_ONLY__)
-        #define PRT_KERNEL_DEVICE_CODE 1
-    #else
-        #undef PRT_KERNEL_DEVICE_CODE
-    #endif
-
-#else
-
-    #undef PRT_KERNEL_DEVICE_CODE
-
-#endif
 
 #if defined(PBRT_BUILD_GPU_RENDERER) && defined(__CUDACC__)
 #ifndef PBRT_NOINLINE
@@ -64,7 +36,7 @@
 #define PBRT_CONST const
 #endif
 #elif defined(PBRT_BUILD_PORTABLERT)
-#if defined(PRT_KERNEL_DEVICE_CODE)
+#if defined(PRT_KERNEL)
 #define PBRT_IS_GPU_CODE
 #endif
 #if defined(PRT_KERNEL_CUDA) || defined(PRT_KERNEL_HIP)
