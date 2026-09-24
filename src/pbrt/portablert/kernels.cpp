@@ -1,8 +1,7 @@
-#ifdef PRT_KERNEL
 #include <portableRT/kernel/device_common.hpp>
+
 #define PBRT_RESTRICT
 #define PBRT_BUILD_PORTABLERT
-#endif
 
 
 #include <pbrt/wavefront/integrator.h>

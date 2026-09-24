@@ -68,6 +68,7 @@ extern __constant__ BasicPBRTOptions OptionsGPU;
 
 void CopyOptionsToGPU();
 #elif defined(PBRT_BUILD_PORTABLERT)
+extern BasicPBRTOptions OptionsGPU;
 void CopyOptionsToGPU();
 #endif  // PBRT_BUILD_GPU_RENDERER
 

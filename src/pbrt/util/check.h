@@ -13,12 +13,13 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <cassert>
 
 namespace pbrt {
 
 void PrintStackTrace();
 
-#if defined(PBRT_IS_GPU_CODE) || defined(PRT_KERNEL)
+#if defined(PBRT_IS_GPU_CODE)
 
 #define CHECK(x) assert(x)
 #define CHECK_IMPL(a, b, op) assert((a)op(b))
@@ -86,7 +87,7 @@ void PrintStackTrace();
 #define CHECK_RARE_TO_STRING(x) #x
 #define CHECK_RARE_EXPAND_AND_TO_STRING(x) CHECK_RARE_TO_STRING(x)
 
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE)
 
 #define CHECK_RARE(freq, condition)
 #define DCHECK_RARE(freq, condition)

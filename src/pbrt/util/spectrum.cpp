@@ -126,6 +126,10 @@ pstd::optional<Spectrum> PiecewiseLinearSpectrum::Read(const std::string &fn,
     }
 }
 
+namespace Spectra {
+extern DenselySampledSpectrum *y;
+}
+
 PiecewiseLinearSpectrum *PiecewiseLinearSpectrum::FromInterleaved(
     pstd::span<const Float> samples, bool normalize, Allocator alloc) {
     CHECK_EQ(0, samples.size() % 2);
@@ -151,9 +155,10 @@ PiecewiseLinearSpectrum *PiecewiseLinearSpectrum::FromInterleaved(
     PiecewiseLinearSpectrum *spec =
         alloc.new_object<pbrt::PiecewiseLinearSpectrum>(lambda, v, alloc);
 
-    if (normalize)
+    if (normalize){
         // Normalize to have luminance of 1.
-        spec->Scale(CIE_Y_integral / InnerProduct(spec, &Spectra::Y()));
+        spec->Scale(CIE_Y_integral / InnerProduct(spec, Spectra::y));
+    }
 
     return spec;
 }
@@ -266,7 +271,7 @@ constexpr int nCIESamples = 471;
 extern const Float CIE_lambda[nCIESamples];
 
 // Spectral Data
-const Float CIE_X[nCIESamples] = {
+constexpr Float CIE_X[nCIESamples] = {
     // CIE X function values
     0.0001299000,   0.0001458470,   0.0001638021,   0.0001840037,   0.0002066902,
     0.0002321000,   0.0002607280,   0.0002930750,   0.0003293880,   0.0003699140,
@@ -2569,7 +2574,9 @@ DenselySampledSpectrum D(Float temperature, Allocator alloc) {
 namespace Spectra {
 
 #if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
-PBRT_GPU DenselySampledSpectrum *xGPU, *yGPU, *zGPU;
+PBRT_GPU DenselySampledSpectrum *xGPU;
+PBRT_GPU DenselySampledSpectrum *yGPU;
+PBRT_GPU DenselySampledSpectrum *zGPU;
 #endif
 DenselySampledSpectrum *x;
 DenselySampledSpectrum *y;

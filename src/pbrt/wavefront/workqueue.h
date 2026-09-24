@@ -46,7 +46,7 @@ class WorkQueue : public SOA<WorkItem> {
     WorkQueue(int n, Allocator alloc) : SOA<WorkItem>(n, alloc) {}
     WorkQueue &operator=(const WorkQueue &w) {
         SOA<WorkItem>::operator=(w);
-#if defined(PBRT_IS_GPU_CODE) && defined(PBRT_USE_LEGACY_CUDA_ATOMICS)
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE) && defined(PBRT_USE_LEGACY_CUDA_ATOMICS)
         size = w.size;
 #else
         size.store(w.size.load());
@@ -56,7 +56,7 @@ class WorkQueue : public SOA<WorkItem> {
 
     PBRT_CPU_GPU
     int Size() const {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_USE_LEGACY_CUDA_ATOMICS
         return size;
 #else
@@ -68,7 +68,7 @@ class WorkQueue : public SOA<WorkItem> {
     }
     PBRT_CPU_GPU
     void Reset() {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_USE_LEGACY_CUDA_ATOMICS
         size = 0;
 #else
@@ -90,7 +90,7 @@ class WorkQueue : public SOA<WorkItem> {
     // WorkQueue Protected Methods
     PBRT_CPU_GPU
     int AllocateEntry() {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_USE_LEGACY_CUDA_ATOMICS
         return atomicAdd(&size, 1);
 #else
@@ -103,7 +103,7 @@ class WorkQueue : public SOA<WorkItem> {
 
   private:
     // WorkQueue Private Members
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_USE_LEGACY_CUDA_ATOMICS
     int size = 0;
 #else

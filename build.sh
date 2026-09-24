@@ -24,7 +24,7 @@ BUILD_DIR="${ROOT}/build-portablert"
 JOBS="${JOBS:-$(nproc)}"
 
 PORTABLERT_ROOT="${PORTABLERT_ROOT:-${ROOT}/../portableRT/build/install}"
-DPCPP_ROOT="${DPCPP_ROOT:-/scratch/homelocal/encalle/dpc++6.1.0}"
+DPCPP_ROOT="${DPCPP_ROOT:-/homelocal/encalle_local/Desktop/CleanBuilds/dpc++6.1.0}"
 
 CMAKE="${CMAKE:-cmake}"
 
@@ -40,6 +40,10 @@ CMAKE="${CMAKE:-cmake}"
     -DPBRT_ENABLE_CUDA=OFF \
     -DDPCPP_ROOT="${DPCPP_ROOT}" \
     -DPORTABLERT_ROOT="${PORTABLERT_ROOT}" \
+    -DHIPRT_ROOT=/homelocal/encalle_local/Desktop/CleanBuilds/hiprt/ \
+    -Dembree_ROOT=/homelocal/encalle_local/Desktop/CleanBuilds/embree4.3.2-sycl \
+    -DOptiX_ROOT=/homelocal/encalle_local/Desktop/CleanBuilds/NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64 \
+    -DPRT_GLOBAL_PROPAGATION=OFF \
     -S "${ROOT}"
 
 

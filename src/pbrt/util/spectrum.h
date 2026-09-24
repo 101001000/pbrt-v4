@@ -717,7 +717,7 @@ void Init(Allocator alloc);
 
 PBRT_CPU_GPU
 inline const DenselySampledSpectrum &X() {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE)
     extern PBRT_GPU DenselySampledSpectrum *xGPU;
     return *xGPU;
 #else
@@ -728,7 +728,7 @@ inline const DenselySampledSpectrum &X() {
 
 PBRT_CPU_GPU
 inline const DenselySampledSpectrum &Y() {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) 
     extern PBRT_GPU DenselySampledSpectrum *yGPU;
     return *yGPU;
 #else
@@ -739,7 +739,7 @@ inline const DenselySampledSpectrum &Y() {
 
 PBRT_CPU_GPU
 inline const DenselySampledSpectrum &Z() {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) 
     extern PBRT_GPU DenselySampledSpectrum *zGPU;
     return *zGPU;
 #else

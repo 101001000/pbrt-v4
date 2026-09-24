@@ -18,8 +18,38 @@
 #endif  // PBRT_IS_WINDOWS
 
 // GPU Macro Definitions
-#if defined(__CUDA_ARCH__)
+#if defined(__CUDA_ARCH__) && defined(PBRT_BUILD_GPU_RENDERER) 
 #define PBRT_IS_GPU_CODE
+#endif
+
+#if PRT_KERNEL_CUDA
+
+    #if defined(__CUDA_ARCH__)
+        #define PRT_KERNEL_DEVICE_CODE 1
+    #else
+        #undef PRT_KERNEL_DEVICE_CODE
+    #endif
+
+#elif PRT_KERNEL_HIP
+
+    #if defined(__HIP_DEVICE_COMPILE__)
+        #define PRT_KERNEL_DEVICE_CODE 1
+    #else
+        #undef PRT_KERNEL_DEVICE_CODE
+    #endif
+
+#elif PRT_KERNEL_SYCL
+
+    #if defined(__SYCL_DEVICE_ONLY__)
+        #define PRT_KERNEL_DEVICE_CODE 1
+    #else
+        #undef PRT_KERNEL_DEVICE_CODE
+    #endif
+
+#else
+
+    #undef PRT_KERNEL_DEVICE_CODE
+
 #endif
 
 #if defined(PBRT_BUILD_GPU_RENDERER) && defined(__CUDACC__)
@@ -32,6 +62,19 @@
 #define PBRT_CONST __device__ const
 #else
 #define PBRT_CONST const
+#endif
+#elif defined(PBRT_BUILD_PORTABLERT)
+#if defined(PRT_KERNEL_DEVICE_CODE)
+#define PBRT_IS_GPU_CODE
+#endif
+#if defined(PRT_KERNEL_CUDA) || defined(PRT_KERNEL_HIP)
+#define PBRT_GPU __device__
+#define PBRT_CPU_GPU __host__ __device__
+#define PBRT_CONST __device__ const
+#else
+#define PBRT_CONST const
+#define PBRT_CPU_GPU
+#define PBRT_GPU
 #endif
 #else
 #define PBRT_CONST const

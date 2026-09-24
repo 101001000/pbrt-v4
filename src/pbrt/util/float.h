@@ -56,7 +56,7 @@ static constexpr float OneMinusEpsilon = FloatOneMinusEpsilon;
 template <typename T>
 inline PBRT_CPU_GPU typename std::enable_if_t<std::is_floating_point_v<T>, bool> IsNaN(
     T v) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
     return isnan(v);
 #else
     return std::isnan(v);
@@ -71,7 +71,7 @@ inline PBRT_CPU_GPU typename std::enable_if_t<std::is_integral_v<T>, bool> IsNaN
 template <typename T>
 inline PBRT_CPU_GPU typename std::enable_if_t<std::is_floating_point_v<T>, bool> IsInf(
     T v) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
     return isinf(v);
 #else
     return std::isinf(v);
@@ -86,7 +86,7 @@ inline PBRT_CPU_GPU typename std::enable_if_t<std::is_integral_v<T>, bool> IsInf
 template <typename T>
 inline PBRT_CPU_GPU typename std::enable_if_t<std::is_floating_point_v<T>, bool> IsFinite(
     T v) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
     return isfinite(v);
 #else
     return std::isfinite(v);
@@ -111,7 +111,7 @@ inline long double FMA(long double a, long double b, long double c) {
 
 PBRT_CPU_GPU
 inline uint32_t FloatToBits(float f) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
     return __float_as_uint(f);
 #else
     return pstd::bit_cast<uint32_t>(f);
@@ -120,7 +120,7 @@ inline uint32_t FloatToBits(float f) {
 
 PBRT_CPU_GPU
 inline float BitsToFloat(uint32_t ui) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
     return __uint_as_float(ui);
 #else
     return pstd::bit_cast<float>(ui);
@@ -144,7 +144,7 @@ inline uint32_t SignBit(float v) {
 
 PBRT_CPU_GPU
 inline uint64_t FloatToBits(double f) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
     return __double_as_longlong(f);
 #else
     return pstd::bit_cast<uint64_t>(f);
@@ -153,7 +153,7 @@ inline uint64_t FloatToBits(double f) {
 
 PBRT_CPU_GPU
 inline double BitsToFloat(uint64_t ui) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
     return __longlong_as_double(ui);
 #else
     return pstd::bit_cast<double>(ui);
@@ -202,7 +202,7 @@ PBRT_CPU_GPU inline double NextFloatUp(double v);
 PBRT_CPU_GPU inline double NextFloatDown(double v);
 
 inline PBRT_CPU_GPU Float AddRoundUp(Float a, Float b) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return __dadd_ru(a, b);
 #else
@@ -213,7 +213,7 @@ inline PBRT_CPU_GPU Float AddRoundUp(Float a, Float b) {
 #endif
 }
 inline PBRT_CPU_GPU Float AddRoundDown(Float a, Float b) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return __dadd_rd(a, b);
 #else
@@ -232,7 +232,7 @@ inline PBRT_CPU_GPU Float SubRoundDown(Float a, Float b) {
 }
 
 inline PBRT_CPU_GPU Float MulRoundUp(Float a, Float b) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return __dmul_ru(a, b);
 #else
@@ -244,7 +244,7 @@ inline PBRT_CPU_GPU Float MulRoundUp(Float a, Float b) {
 }
 
 inline PBRT_CPU_GPU Float MulRoundDown(Float a, Float b) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return __dmul_rd(a, b);
 #else
@@ -256,7 +256,7 @@ inline PBRT_CPU_GPU Float MulRoundDown(Float a, Float b) {
 }
 
 inline PBRT_CPU_GPU Float DivRoundUp(Float a, Float b) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return __ddiv_ru(a, b);
 #else
@@ -268,7 +268,7 @@ inline PBRT_CPU_GPU Float DivRoundUp(Float a, Float b) {
 }
 
 inline PBRT_CPU_GPU Float DivRoundDown(Float a, Float b) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return __ddiv_rd(a, b);
 #else
@@ -280,7 +280,7 @@ inline PBRT_CPU_GPU Float DivRoundDown(Float a, Float b) {
 }
 
 inline PBRT_CPU_GPU Float SqrtRoundUp(Float a) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return __dsqrt_ru(a);
 #else
@@ -292,7 +292,7 @@ inline PBRT_CPU_GPU Float SqrtRoundUp(Float a) {
 }
 
 inline PBRT_CPU_GPU Float SqrtRoundDown(Float a) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return __dsqrt_rd(a);
 #else
@@ -304,7 +304,7 @@ inline PBRT_CPU_GPU Float SqrtRoundDown(Float a) {
 }
 
 inline PBRT_CPU_GPU Float FMARoundUp(Float a, Float b, Float c) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return __fma_ru(a, b, c);  // FIXME: what to do here?
 #else
@@ -316,7 +316,7 @@ inline PBRT_CPU_GPU Float FMARoundUp(Float a, Float b, Float c) {
 }
 
 inline PBRT_CPU_GPU Float FMARoundDown(Float a, Float b, Float c) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return __fma_rd(a, b, c);  // FIXME: what to do here?
 #else
@@ -420,7 +420,7 @@ class Half {
 
     PBRT_CPU_GPU
     explicit Half(float ff) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
         h = __half_as_ushort(__float2half(ff));
 #else
         // Rounding ties to nearest even instead of towards +inf
@@ -473,7 +473,7 @@ class Half {
 
     PBRT_CPU_GPU
     explicit operator float() const {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
         return __half2float(__ushort_as_half(h));
 #else
         FP16 h;
@@ -504,7 +504,7 @@ class Half {
 
     PBRT_CPU_GPU
     bool operator==(const Half &v) const {
-#if defined(PBRT_IS_GPU_CODE) && __CUDA_ARCH__ >= 530
+#if defined(PBRT_IS_GPU_CODE) && __CUDA_ARCH__ >= 530 && !defined(PRT_KERNEL_DEVICE_CODE)
         return __ushort_as_half(h) == __ushort_as_half(v.h);
 #else
         if (Bits() == v.Bits())

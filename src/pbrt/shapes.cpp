@@ -149,15 +149,24 @@ std::string TriangleIntersection::ToString() const {
 }
 
 pstd::vector<const TriangleMesh *> *Triangle::allMeshes;
-#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
+#if defined(PBRT_BUILD_GPU_RENDERER)
 PBRT_GPU pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
 #endif
 
+#if defined(PBRT_BUILD_PORTABLERT) && defined(PRT_KERNEL_DEVICE_CODE)
+pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
+#endif
+
+
 void Triangle::Init(Allocator alloc) {
     allMeshes = alloc.new_object<pstd::vector<const TriangleMesh *>>(alloc);
-#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
+#if defined(PBRT_BUILD_GPU_RENDERER)
     if (Options->useGPU)
         PBRT_COPY_TO_SYMBOL(allTriangleMeshesGPU, &allMeshes, sizeof(allMeshes));
+#endif
+#if defined(PBRT_BUILD_PORTABLERT)
+    if (Options->useGPU)
+        PBRT_COPY_TO_SYMBOL(allTriangleMeshesGPU, &allMeshes, sizeof(allMeshes)); // in reality this is a global copy to.
 #endif
 }
 
@@ -1017,9 +1026,14 @@ pstd::vector<Shape> BilinearPatch::CreatePatches(const BilinearPatchMesh *mesh,
 }
 
 pstd::vector<const BilinearPatchMesh *> *BilinearPatch::allMeshes;
-#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
+#if defined(PBRT_BUILD_GPU_RENDERER)
 PBRT_GPU pstd::vector<const BilinearPatchMesh *> *allBilinearMeshesGPU;
 #endif
+
+#if defined(PBRT_BUILD_PORTABLERT) && defined(PBRT_IS_GPU_CODE)
+pstd::vector<const BilinearPatchMesh *> *allBilinearMeshesGPU;
+#endif
+
 
 void BilinearPatch::Init(Allocator alloc) {
     allMeshes = alloc.new_object<pstd::vector<const BilinearPatchMesh *>>(alloc);

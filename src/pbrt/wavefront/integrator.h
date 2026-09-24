@@ -128,7 +128,7 @@ class WavefrontPathIntegrator {
         if (Options->useGPU){
 #ifdef PBRT_BUILD_GPU_RENDERER
             GPUParallelFor(description, 1, [=] PBRT_GPU(int) mutable { func(); }); }
-#elif defined(PBRT_BUILD_PORTABLERT) || defined(PRT_KERNEL)
+#elif defined(PBRT_BUILD_PORTABLERT) || defined(PRT_KERNEL_DEVICE_CODE)
             if(IsPortableRTKernel(description)){
                 GPUParallelFor(description, 1, [=] PBRT_GPU(int) mutable { func(); });
             } else {

@@ -7,7 +7,7 @@
 #include <pbrt/film.h>
 #include <pbrt/wavefront/integrator.h>
 
-#ifdef PRT_KERNEL
+#ifdef PRT_KERNEL_DEVICE_CODE
 
 prt_kernel void dummy(){
     auto hit = prt::closest_hit(prt::Ray());

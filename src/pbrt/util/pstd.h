@@ -253,7 +253,7 @@ class optional {
     bool has_value() const { return set; }
 
   private:
-#ifdef __NVCC__
+#if defined(__NVCC__) && defined(PBRT_BUILD_GPU_RENDERER)  // Work-around NVCC bug
     // Work-around NVCC bug
     PBRT_CPU_GPU
     T *ptr() { return reinterpret_cast<T *>(&optionalValue); }

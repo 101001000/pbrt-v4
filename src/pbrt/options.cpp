@@ -20,18 +20,17 @@ PBRTOptions *Options;
 __constant__ BasicPBRTOptions OptionsGPU;
 
 void CopyOptionsToGPU() {
-    PBRT_COPY_TO_SYMBOL(OptionsGPU, Options, sizeof(OptionsGPU));
+    CUDA_CHECK(cudaMemcpyToSymbol(OptionsGPU, Options, sizeof(OptionsGPU)));
 }
-#elif defined(PBRT_BUILD_PORTABLERT)
+#endif
+
+#if defined(PBRT_BUILD_PORTABLERT)
+#if defined(PBRT_IS_GPU_CODE)
+BasicPBRTOptions OptionsGPU;
+#endif
 void CopyOptionsToGPU() {
-    // Device code dereferences pbrt::Options through the registered global
-    // pointer, so the options must live in shared memory. construction into
-    // the raw shared allocation (assignment would inspect an
-    // uninitialized std::string).
-    PBRTOptions *shared =
-        reinterpret_cast<PBRTOptions *>(PRTBackend()->shared_malloc(sizeof(PBRTOptions)));
-    new (shared) PBRTOptions(*Options);
-    PBRT_COPY_TO_SYMBOL(Options, &shared, sizeof(shared));
+    PRTBackend()->global_copy_to("OptionsGPU", Options, sizeof(BasicPBRTOptions));
+
 }
 #endif
 

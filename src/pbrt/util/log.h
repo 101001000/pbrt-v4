@@ -60,6 +60,12 @@ PBRT_CPU_GPU [[noreturn]] inline void LogFatal(LogLevel level, const char *file,
 
 #ifdef PBRT_IS_GPU_CODE
 
+#ifdef PRT_KERNEL_DEVICE_CODE
+#define LOG_VERBOSE(...)
+#define LOG_ERROR(...)    
+#define LOG_FATAL(...) 
+#else
+
 extern __constant__ LogLevel LOGGING_LogLevelGPU;
 
 #define LOG_VERBOSE(...)                               \
@@ -73,6 +79,7 @@ extern __constant__ LogLevel LOGGING_LogLevelGPU;
 #define LOG_FATAL(...) \
     pbrt::LogFatal(pbrt::LogLevel::Fatal, __FILE__, __LINE__, __VA_ARGS__)
 
+#endif //PRT_KERNEL_DEVICE_CODE
 #else
 
 // Logging Macros

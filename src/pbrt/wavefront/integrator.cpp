@@ -43,8 +43,8 @@
 #include <cuda_runtime.h>
 #endif  // PBRT_BUILD_GPU_RENDERER
 
-#ifdef PRT_KERNEL
-prt_kernel void ResetrayqueueKernel(){
+#ifdef PRT_KERNEL_DEVICE_CODE
+prt_kernel void ResetrayqueuePRTKernel(){
     pbrt::RayQueue *cameraRayQueue = g_integrator->CurrentRayQueue(0);
     //PBRT_DBG("Starting scanlines at y0 = %d, sample %d / %d\n", y0, sampleIndex, samplesPerPixel);
     cameraRayQueue->Reset();
@@ -172,7 +172,7 @@ WavefrontPathIntegrator::WavefrontPathIntegrator(
         CHECK(mr);
         aggregate = new OptiXAggregate(scene, mr, textures, shapeIndexToAreaLights, media,
                                        namedMaterials, materials);
-#elif defined(PBRT_BUILD_PORTABLERT) || defined(PRT_KERNEL)
+#elif defined(PBRT_BUILD_PORTABLERT) || defined(PRT_KERNEL_DEVICE_CODE)
         // The portableRT backend takes over aggregation and traversal in a
         // later step; the CPU aggregate keeps --gpu renders correct meanwhile.
         aggregate = new CPUAggregate(scene, textures, shapeIndexToAreaLights, media,

@@ -128,7 +128,7 @@ class AtomicFloat {
     // AtomicFloat Public Methods
     PBRT_CPU_GPU
     explicit AtomicFloat(float v = 0) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
         value = v;
 #else
         bits = FloatToBits(v);
@@ -137,7 +137,7 @@ class AtomicFloat {
 
     PBRT_CPU_GPU
     operator float() const {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
         return value;
 #else
         return BitsToFloat(bits);
@@ -145,7 +145,7 @@ class AtomicFloat {
     }
     PBRT_CPU_GPU
     Float operator=(float v) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
         value = v;
         return value;
 #else
@@ -156,7 +156,7 @@ class AtomicFloat {
 
     PBRT_CPU_GPU
     void Add(float v) {
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
         atomicAdd(&value, v);
 #else
         FloatBits oldBits = bits, newBits;
@@ -170,7 +170,7 @@ class AtomicFloat {
 
   private:
     // AtomicFloat Private Members
-#ifdef PBRT_IS_GPU_CODE
+#if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
     float value;
 #else
     std::atomic<FloatBits> bits;
@@ -182,7 +182,7 @@ class AtomicDouble {
     // AtomicDouble Public Methods
     PBRT_CPU_GPU
     explicit AtomicDouble(double v = 0) {
-#if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600)
+#if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600) && !defined(PRT_KERNEL_DEVICE_CODE)
         value = v;
 #else
         bits = FloatToBits(v);
@@ -191,7 +191,7 @@ class AtomicDouble {
 
     PBRT_CPU_GPU
     operator double() const {
-#if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600)
+#if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600) && !defined(PRT_KERNEL_DEVICE_CODE)
         return value;
 #else
         return BitsToFloat(bits);
@@ -200,7 +200,7 @@ class AtomicDouble {
 
     PBRT_CPU_GPU
     double operator=(double v) {
-#if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600)
+#if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600) && !defined(PRT_KERNEL_DEVICE_CODE)
         value = v;
         return value;
 #else
@@ -211,9 +211,9 @@ class AtomicDouble {
 
     PBRT_CPU_GPU
     void Add(double v) {
-#if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600)
+#if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600) && !defined(PRT_KERNEL_DEVICE_CODE)
         atomicAdd(&value, v);
-#elif defined(__CUDA_ARCH__)
+#elif defined(__CUDA_ARCH__) && !defined(PRT_KERNEL_DEVICE_CODE)
         uint64_t old = bits, assumed;
 
         do {
@@ -233,9 +233,9 @@ class AtomicDouble {
 
   private:
     // AtomicDouble Private Data
-#if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600)
+#if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600) && !defined(PRT_KERNEL_DEVICE_CODE)
     double value;
-#elif defined(__CUDA_ARCH__)
+#elif defined(__CUDA_ARCH__) && !defined(PRT_KERNEL_DEVICE_CODE)
     uint64_t bits;
 #else
     std::atomic<uint64_t> bits;
