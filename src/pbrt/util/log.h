@@ -44,16 +44,27 @@ extern FILE *logFile;
 PBRT_CPU_GPU
 void Log(LogLevel level, const char *file, int line, const char *s);
 
+#if defined(PBRT_BUILD_PORTABLERT)
+PBRT_CPU_GPU void LogFatal(LogLevel level, const char *file, int line,
+                                        const char *s);
+#else
 PBRT_CPU_GPU [[noreturn]] void LogFatal(LogLevel level, const char *file, int line,
                                         const char *s);
+#endif
 
 template <typename... Args>
 PBRT_CPU_GPU inline void Log(LogLevel level, const char *file, int line, const char *fmt,
                              Args &&...args);
 
+#if defined(PBRT_BUILD_PORTABLERT)
+template <typename... Args>
+PBRT_CPU_GPU inline void LogFatal(LogLevel level, const char *file, int line,
+                                               const char *fmt, Args &&...args);
+#else
 template <typename... Args>
 PBRT_CPU_GPU [[noreturn]] inline void LogFatal(LogLevel level, const char *file, int line,
                                                const char *fmt, Args &&...args);
+#endif
 
 #define TO_STRING(x) TO_STRING2(x)
 #define TO_STRING2(x) #x
@@ -103,7 +114,7 @@ extern __constant__ LogLevel LOGGING_LogLevelGPU;
 namespace pbrt {
 
 template <typename... Args>
-inline void Log(LogLevel level, const char *file, int line, const char *fmt,
+PBRT_CPU_GPU inline void Log(LogLevel level, const char *file, int line, const char *fmt,
                 Args &&...args) {
 #ifdef PBRT_IS_GPU_CODE
     Log(level, file, line, fmt);  // just the format string #yolo
@@ -114,7 +125,7 @@ inline void Log(LogLevel level, const char *file, int line, const char *fmt,
 }
 
 template <typename... Args>
-inline void LogFatal(LogLevel level, const char *file, int line, const char *fmt,
+PBRT_CPU_GPU inline void LogFatal(LogLevel level, const char *file, int line, const char *fmt,
                      Args &&...args) {
 #ifdef PBRT_IS_GPU_CODE
     LogFatal(level, file, line, fmt);  // just the format string #yolo

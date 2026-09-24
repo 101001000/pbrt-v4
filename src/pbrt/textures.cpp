@@ -356,7 +356,7 @@ std::string FBmTexture::ToString() const {
 }
 
 // SpectrumImageTexture Method Definitions
-SampledSpectrum SpectrumImageTexture::Evaluate(TextureEvalContext ctx,
+PBRT_CPU_GPU SampledSpectrum SpectrumImageTexture::Evaluate(TextureEvalContext ctx,
                                                SampledWavelengths lambda) const {
 #ifdef PBRT_IS_GPU_CODE
     assert(!"Should not be called in GPU code");
@@ -477,7 +477,7 @@ SpectrumImageTexture *SpectrumImageTexture::Create(
 }
 
 // MarbleTexture Method Definitions
-SampledSpectrum MarbleTexture::Evaluate(TextureEvalContext ctx,
+PBRT_CPU_GPU SampledSpectrum MarbleTexture::Evaluate(TextureEvalContext ctx,
                                         SampledWavelengths lambda) const {
     TexCoord3D c = mapping.Map(ctx);
     c.p *= scale;
@@ -695,7 +695,7 @@ std::string SpectrumPtexTexture::ToString() const {
     return StringPrintf("[ SpectrumPtexTexture %s ]", BaseToString());
 }
 
-Float FloatPtexTexture::Evaluate(TextureEvalContext ctx) const {
+PBRT_CPU_GPU Float FloatPtexTexture::Evaluate(TextureEvalContext ctx) const {
 #ifdef PBRT_IS_GPU_CODE
     LOG_FATAL("Ptex not supported with GPU renderer");
     return 0;
@@ -709,7 +709,7 @@ Float FloatPtexTexture::Evaluate(TextureEvalContext ctx) const {
 #endif
 }
 
-SampledSpectrum SpectrumPtexTexture::Evaluate(TextureEvalContext ctx,
+PBRT_CPU_GPU SampledSpectrum SpectrumPtexTexture::Evaluate(TextureEvalContext ctx,
                                               SampledWavelengths lambda) const {
 #ifdef PBRT_IS_GPU_CODE
     LOG_FATAL("Ptex not supported with GPU renderer");

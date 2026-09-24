@@ -46,7 +46,7 @@ Float SpectrumToPhotometric(Spectrum s) {
     return InnerProduct(&Spectra::Y(), s);
 }
 
-XYZ SpectrumToXYZ(Spectrum s) {
+PBRT_CPU_GPU XYZ SpectrumToXYZ(Spectrum s) {
     return XYZ(InnerProduct(&Spectra::X(), s), InnerProduct(&Spectra::Y(), s),
                InnerProduct(&Spectra::Z(), s)) /
            CIE_Y_integral;

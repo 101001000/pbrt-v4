@@ -48,6 +48,8 @@ class WorkQueue : public SOA<WorkItem> {
         SOA<WorkItem>::operator=(w);
 #if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE) && defined(PBRT_USE_LEGACY_CUDA_ATOMICS)
         size = w.size;
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+        //TODO
 #else
         size.store(w.size.load());
 #endif
@@ -58,10 +60,12 @@ class WorkQueue : public SOA<WorkItem> {
     int Size() const {
 #if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
 #ifdef PBRT_USE_LEGACY_CUDA_ATOMICS
-        return size;
+        return size; 
 #else
         return size.load(cuda::std::memory_order_relaxed);
 #endif
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+        return 0; //TODO
 #else
         return size.load(std::memory_order_relaxed);
 #endif
@@ -74,6 +78,8 @@ class WorkQueue : public SOA<WorkItem> {
 #else
         size.store(0, cuda::std::memory_order_relaxed);
 #endif
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+        //TODO
 #else
         size.store(0, std::memory_order_relaxed);
 #endif
@@ -96,6 +102,8 @@ class WorkQueue : public SOA<WorkItem> {
 #else
         return size.fetch_add(1, cuda::std::memory_order_relaxed);
 #endif
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+        return 0;
 #else
         return size.fetch_add(1, std::memory_order_relaxed);
 #endif
@@ -109,6 +117,8 @@ class WorkQueue : public SOA<WorkItem> {
 #else
     cuda::atomic<int, cuda::thread_scope_device> size{0};
 #endif
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+    int size = 0;
 #else
     std::atomic<int> size{0};
 #endif  // PBRT_IS_GPU_CODE

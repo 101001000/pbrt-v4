@@ -130,6 +130,8 @@ class AtomicFloat {
     explicit AtomicFloat(float v = 0) {
 #if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
         value = v;
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+        //TODO
 #else
         bits = FloatToBits(v);
 #endif
@@ -139,6 +141,8 @@ class AtomicFloat {
     operator float() const {
 #if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
         return value;
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+        return 0;
 #else
         return BitsToFloat(bits);
 #endif
@@ -148,6 +152,9 @@ class AtomicFloat {
 #if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
         value = v;
         return value;
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+        //todo
+        return 0;
 #else
         bits = FloatToBits(v);
         return v;
@@ -158,6 +165,8 @@ class AtomicFloat {
     void Add(float v) {
 #if defined(PBRT_IS_GPU_CODE) && !defined(PRT_KERNEL_DEVICE_CODE)
         atomicAdd(&value, v);
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+        //todo
 #else
         FloatBits oldBits = bits, newBits;
         do {
@@ -184,6 +193,8 @@ class AtomicDouble {
     explicit AtomicDouble(double v = 0) {
 #if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600) && !defined(PRT_KERNEL_DEVICE_CODE)
         value = v;
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+            //TODO
 #else
         bits = FloatToBits(v);
 #endif
@@ -193,6 +204,9 @@ class AtomicDouble {
     operator double() const {
 #if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600) && !defined(PRT_KERNEL_DEVICE_CODE)
         return value;
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+            //TODO
+        return 0;
 #else
         return BitsToFloat(bits);
 #endif
@@ -203,6 +217,9 @@ class AtomicDouble {
 #if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600) && !defined(PRT_KERNEL_DEVICE_CODE)
         value = v;
         return value;
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+            //TODO
+            return 0;
 #else
         bits = FloatToBits(v);
         return v;
@@ -221,6 +238,8 @@ class AtomicDouble {
             old = atomicCAS((unsigned long long int *)&bits, assumed,
                             __double_as_longlong(v + __longlong_as_double(assumed)));
         } while (assumed != old);
+#elif defined(PRT_KERNEL_DEVICE_CODE)
+    //TODO
 #else
         uint64_t oldBits = bits, newBits;
         do {
@@ -236,6 +255,8 @@ class AtomicDouble {
 #if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600) && !defined(PRT_KERNEL_DEVICE_CODE)
     double value;
 #elif defined(__CUDA_ARCH__) && !defined(PRT_KERNEL_DEVICE_CODE)
+    uint64_t bits;
+#elif defined(PRT_KERNEL_DEVICE_CODE)
     uint64_t bits;
 #else
     std::atomic<uint64_t> bits;

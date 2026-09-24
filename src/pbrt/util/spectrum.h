@@ -85,7 +85,7 @@ DenselySampledSpectrum D(Float T, Allocator alloc);
 
 Float SpectrumToPhotometric(Spectrum s);
 
-XYZ SpectrumToXYZ(Spectrum s);
+PBRT_CPU_GPU XYZ SpectrumToXYZ(Spectrum s);
 
 // SampledSpectrum Definition
 class SampledSpectrum {

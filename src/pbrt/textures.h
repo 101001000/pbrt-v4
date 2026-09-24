@@ -220,7 +220,7 @@ class TextureMapping2D : public TaggedPointer<UVMapping, SphericalMapping,
 };
 
 // TextureMapping2D Inline Functions
-inline TexCoord2D TextureMapping2D::Map(TextureEvalContext ctx) const {
+PBRT_CPU_GPU inline TexCoord2D TextureMapping2D::Map(TextureEvalContext ctx) const {
     auto map = [&](auto ptr) { return ptr->Map(ctx); };
     return Dispatch(map);
 }
@@ -260,7 +260,7 @@ class TextureMapping3D : public TaggedPointer<PointTransformMapping> {
     TexCoord3D Map(TextureEvalContext ctx) const;
 };
 
-inline TexCoord3D TextureMapping3D::Map(TextureEvalContext ctx) const {
+PBRT_CPU_GPU inline TexCoord3D TextureMapping3D::Map(TextureEvalContext ctx) const {
     auto map = [&](auto ptr) { return ptr->Map(ctx); };
     return Dispatch(map);
 }
@@ -1125,12 +1125,12 @@ class WrinkledTexture {
     Float omega;
 };
 
-inline Float FloatTexture::Evaluate(TextureEvalContext ctx) const {
+PBRT_CPU_GPU inline Float FloatTexture::Evaluate(TextureEvalContext ctx) const {
     auto eval = [&](auto ptr) { return ptr->Evaluate(ctx); };
     return Dispatch(eval);
 }
 
-inline SampledSpectrum SpectrumTexture::Evaluate(TextureEvalContext ctx,
+PBRT_CPU_GPU inline SampledSpectrum SpectrumTexture::Evaluate(TextureEvalContext ctx,
                                                  SampledWavelengths lambda) const {
     auto eval = [&](auto ptr) { return ptr->Evaluate(ctx, lambda); };
     return Dispatch(eval);

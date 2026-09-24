@@ -44,6 +44,7 @@ CMAKE="${CMAKE:-cmake}"
     -Dembree_ROOT=/homelocal/encalle_local/Desktop/CleanBuilds/embree4.3.2-sycl \
     -DOptiX_ROOT=/homelocal/encalle_local/Desktop/CleanBuilds/NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64 \
     -DPRT_GLOBAL_PROPAGATION=OFF \
+    -DROCM_ROOT=/opt/rocm/ \
     -S "${ROOT}"
 
 
