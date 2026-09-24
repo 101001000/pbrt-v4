@@ -99,27 +99,31 @@ class WavefrontPathIntegrator {
             if(strcmp(description, "Update film") == 0) {
                 GPUParallelFor(description, nItems, func);
             } else {
+                std::cout << "Pending ParallelFor kernel to port: " << description << std::endl;
                 pbrt::ParallelFor(0, nItems, func);
             }
 #else
             LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");
 #endif
-        else
+        else 
             pbrt::ParallelFor(0, nItems, func);
+        
     }
 
     template <typename F>
     void Do(const char *description, F &&func) {
-        if (Options->useGPU)
+        if (Options->useGPU){
 #ifdef PBRT_BUILD_GPU_RENDERER
-            GPUParallelFor(description, 1, [=] PBRT_GPU(int) mutable { func(); });
+            GPUParallelFor(description, 1, [=] PBRT_GPU(int) mutable { func(); }); }
 #elif defined(PBRT_BUILD_PORTABLERT) || defined(PRT_KERNEL)
-            func();
+            std::cout << "Pending Do kernel to port: " << description << std::endl;
+            func(); }
 #else
-            LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");
+            LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled"); }
 #endif
-        else
+        else {
             func();
+        }
     }
 
     RayQueue *CurrentRayQueue(int wavefrontDepth) {

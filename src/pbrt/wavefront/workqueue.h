@@ -129,6 +129,7 @@ void ForAllQueued(const char *desc, const WorkQueue<WorkItem> *q, int maxQueued,
 #elif defined(PBRT_BUILD_PORTABLERT)
         // The portableRT launch adapters land in a later step; host execution
         // keeps --gpu renders correct meanwhile.
+        std::cout << "Pending ParallelFor ForAllQueued kernel to port: " << desc << std::endl;
         ParallelFor(0, q->Size(), [&](int index) { func((*q)[index]); });
 #else
         LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");
