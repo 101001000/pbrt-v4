@@ -30,6 +30,23 @@ namespace pbrt {
 // The backend selected by GPUInit(); null before GPUInit.
 prt::Backend *PRTBackend();
 
+static inline bool IsPortableRTKernel(const char *description) {
+    static constexpr const char *ported_kernels[] = {
+        "Update film",
+        "Reset ray queue",
+        "Generate camera rays",
+        "Update camera ray stats",
+        "Reset queues before tracing rays",
+        "Generate ray samples",
+    };
+
+    for (const char *kernel : ported_kernels)
+        if (strncmp(description, kernel, strlen(kernel)) == 0)
+            return true;
+
+    return false;
+}
+
 struct EnqueuedArgs {
     void* data;
     size_t size;
@@ -82,15 +99,21 @@ void GPUParallelFor(const char *description, int nItems, F func) {
 #ifdef PBRT_DEBUG_BUILD
     LOG_VERBOSE("Launching %s", description);
 #endif
-    auto make_kernel_name = [](const char* description) {
+    auto make_kernel_name = [](const char *description) {
         std::string result(description);
+
+        std::replace(result.begin(), result.end(), '-', '_');
+
         result.erase(
             std::remove(result.begin(), result.end(), ' '),
             result.end()
         );
+
         result += "PRTKernel";
-        if(instance_type != "")
+
+        if (instance_type != "")
             result += "_" + instance_type;
+
         return result;
     };
     std::vector<unsigned char> dummy_output(0);
@@ -117,7 +140,6 @@ void GPUParallelFor(const char *description, int nItems, F func) {
     //std::free(args.data);
     instance_type = "";
 
-    std::cout << "Invoked parallel for: " << description << std::endl;
 #ifdef PBRT_DEBUG_BUILD
     PRTBackend()->sync();
         std::cout << "Sync parallel for: " << description << std::endl;

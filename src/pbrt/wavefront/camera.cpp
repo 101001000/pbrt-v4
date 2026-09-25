@@ -12,27 +12,9 @@
 #include <pbrt/util/vecmath.h>
 #include <pbrt/wavefront/integrator.h>
 
-#define PBRT_SAMPLERS(X)                  \
-    X(PMJ02BNSampler)                     \
-    X(IndependentSampler)                 \
-    X(StratifiedSampler)                  \
-    X(HaltonSampler)                      \
-    X(PaddedSobolSampler)                 \
-    X(SobolSampler)                       \
-    X(ZSobolSampler)
-
-template <typename T>
-const char* instantiation_name();
-
-#define DEFINE_INSTANTIATION_NAME(type)             \
-    template <>                                     \
-    const char* instantiation_name<pbrt::type>() {  \
-        return #type;                               \
-    }
-
-PBRT_SAMPLERS(DEFINE_INSTANTIATION_NAME)
-
-#undef DEFINE_INSTANTIATION_NAME
+#ifdef PBRT_BUILD_PORTABLERT
+#include <pbrt/portablert/samplers.h>
+#endif
 
 #ifdef PRT_KERNEL
 

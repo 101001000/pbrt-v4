@@ -21,4 +21,6 @@ pbrt::WavefrontPathIntegrator* g_integrator;
 #include <pbrt/cameras.cpp>
 #include <pbrt/wavefront/camera.cpp>
 
+#include <pbrt/wavefront/samples.cpp>
+
 

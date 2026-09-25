@@ -53,21 +53,6 @@ class WavefrontAggregate {
         int maxRays, SubsurfaceScatterQueue *subsurfaceScatterQueue) const = 0;
 };
 
-static bool IsPortableRTKernel(const char *description) {
-    static constexpr const char *portedKernels[] = {
-        "Update film",
-        "Reset ray queue",
-        "Generate camera rays",
-        "Update camera ray stats",
-        "Reset queues before tracing rays",
-    };
-
-    for (const char *kernel : portedKernels)
-        if (strcmp(description, kernel) == 0)
-            return true;
-
-    return false;
-}
 
 // WavefrontPathIntegrator Definition
 class WavefrontPathIntegrator {

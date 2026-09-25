@@ -13,6 +13,63 @@
 #undef interface
 #endif  // interface
 
+#ifdef PBRT_BUILD_PORTABLERT
+#include <pbrt/portablert/samplers.h>
+#endif
+
+#ifdef PRT_KERNEL
+
+#define DEFINE_GENERATE_RAY_SAMPLES_KERNEL(sampler_type)                           \
+prt_kernel void Generateraysamples_##sampler_type##PRTKernel( \
+    int wavefront_depth, int sample_index) {                                       \
+                                                                                   \
+    pbrt::RayQueue *ray_queue =                                                    \
+        g_integrator->CurrentRayQueue(wavefront_depth);                            \
+                                                                                   \
+    int index = global_idx;                                                        \
+    if (index >= ray_queue->Size())                                                \
+        return;                                                                    \
+                                                                                   \
+    const pbrt::RayWorkItem w = (*ray_queue)[index];                               \
+                                                                                   \
+    /* Find first sample dimension */                                              \
+    int dimension = 6 + 7 * w.depth;                                              \
+    if (g_integrator->haveSubsurface)                                              \
+        dimension += 3 * w.depth;                                                 \
+                                                                                   \
+    /* Initialize sampler for pixel, sample index, and dimension */                \
+    pbrt::sampler_type pixel_sampler =                                             \
+        *g_integrator->sampler.Cast<pbrt::sampler_type>();                         \
+                                                                                   \
+    pbrt::Point2i p_pixel =                                                        \
+        g_integrator->pixelSampleState.pPixel[w.pixelIndex];                       \
+                                                                                   \
+    pixel_sampler.StartPixelSample(p_pixel, sample_index, dimension);              \
+                                                                                   \
+    /* Initialize RaySamples structure with sample values */                       \
+    pbrt::RaySamples rs;                                                           \
+    rs.direct.uc = pixel_sampler.Get1D();                                          \
+    rs.direct.u = pixel_sampler.Get2D();                                           \
+                                                                                   \
+    rs.indirect.uc = pixel_sampler.Get1D();                                        \
+    rs.indirect.u = pixel_sampler.Get2D();                                         \
+    rs.indirect.rr = pixel_sampler.Get1D();                                        \
+                                                                                   \
+    rs.haveSubsurface = g_integrator->haveSubsurface;                              \
+    if (g_integrator->haveSubsurface) {                                            \
+        rs.subsurface.uc = pixel_sampler.Get1D();                                  \
+        rs.subsurface.u = pixel_sampler.Get2D();                                   \
+    }                                                                              \
+                                                                                   \
+    /* Store RaySamples in pixel sample state */                                   \
+    g_integrator->pixelSampleState.samples[w.pixelIndex] = rs;                     \
+}
+
+PBRT_SAMPLERS(DEFINE_GENERATE_RAY_SAMPLES_KERNEL)
+
+#endif
+
+
 namespace pbrt {
 
 // WavefrontPathIntegrator Sampler Methods
@@ -32,6 +89,8 @@ void WavefrontPathIntegrator::GenerateRaySamples(int wavefrontDepth, int sampleI
     std::string desc = std::string("Generate ray samples - ") + ConcreteSampler::Name();
 
     RayQueue *rayQueue = CurrentRayQueue(wavefrontDepth);
+    enqueue_args(wavefrontDepth, sampleIndex);
+   // instance_type = instantiation_name<ConcreteSampler>();
     ForAllQueued(
         desc.c_str(), rayQueue, maxQueueSize, PBRT_CPU_GPU_LAMBDA(const RayWorkItem w) {
             // Generate samples for ray segment at current sample index

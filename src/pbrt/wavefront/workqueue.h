@@ -12,9 +12,9 @@
 #endif
 
 #include <pbrt/options.h>
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/util.h>
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif  // defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/util/parallel.h>
 #include <pbrt/util/pstd.h>
 
@@ -141,10 +141,18 @@ void ForAllQueued(const char *desc, const WorkQueue<WorkItem> *q, int maxQueued,
             func((*q)[index]);
         });
 #elif defined(PBRT_BUILD_PORTABLERT)
-        // The portableRT launch adapters land in a later step; host execution
-        // keeps --gpu renders correct meanwhile.
-        std::cout << "Pending ParallelFor ForAllQueued kernel to port: " << desc << std::endl;
-        ParallelFor(0, q->Size(), [&](int index) { func((*q)[index]); });
+        if (IsPortableRTKernel(desc)) {
+            GPUParallelFor(desc, maxQueued, [=] PBRT_GPU(int index) mutable {
+                if (index >= q->Size())
+                    return;
+                func((*q)[index]);
+            });
+        } else {
+            std::cout << "Pending ForAllQueued kernel to port: " << desc << std::endl;
+            ParallelFor(0, q->Size(), [&](int index) {
+                func((*q)[index]);
+            });
+        }
 #else
         LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");
 #endif
