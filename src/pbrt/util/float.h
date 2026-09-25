@@ -478,8 +478,9 @@ class Half {
 #else
         FP16 h;
         h.u = this->h;
-        static const FP32 magic = {113 << 23};
-        static const unsigned int shifted_exp = 0x7c00
+        
+        __attribute__((annotate("prt_ignore_global"))) static const FP32 magic = {113 << 23};
+        __attribute__((annotate("prt_ignore_global"))) static const unsigned int shifted_exp = 0x7c00
                                                 << 13;  // exponent mask after shift
         FP32 o;
 

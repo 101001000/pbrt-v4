@@ -17,7 +17,7 @@ namespace pbrt {
 // PMJ02BN Table Declarations
 constexpr int nPMJ02bnSets = 5;
 constexpr int nPMJ02bnSamples = 65536;
-extern PBRT_CONST uint32_t pmj02bnSamples[nPMJ02bnSets][nPMJ02bnSamples][2];
+__attribute__((annotate("prt_ignore_global"))) extern PBRT_CONST uint32_t pmj02bnSamples[nPMJ02bnSets][nPMJ02bnSamples][2];
 
 // PMJ02BN Table Inline Functions
 PBRT_CPU_GPU inline Point2f GetPMJ02BNSample(int setIndex, int sampleIndex);

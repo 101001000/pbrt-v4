@@ -28,6 +28,9 @@ prt::Backend *PRTBackend() {
     return selectedBackend;
 }
 
+std::queue<EnqueuedArgs> enqueued_args;
+std::string instance_type = "";
+
 void GPUInit() {
     // Prefer an accelerator; the CPU backend is the last resort so that the
     // portableRT path can still render on machines without one.
@@ -44,10 +47,10 @@ void GPUInit() {
         // are uploaded by their owners through PBRT_COPY_TO_SYMBOL.
         prt::kernelapi_init({
             {"g_integrator", sizeof(pbrt::WavefrontPathIntegrator*)},
-            {"g_integrator", sizeof(pbrt::BasicPBRTOptions)},
-            {"x", sizeof(void*)}, // pbrt::Spectra::x (propagated global, see data_sycl.json)
-            {"y", sizeof(void*)}, // pbrt::Spectra::y
-            {"z", sizeof(void*)}  // pbrt::Spectra::z
+            {"OptionsGPU", sizeof(pbrt::BasicPBRTOptions)},
+            {"xGPU", sizeof(void*)}, // pbrt::Spectra::x (propagated global, see data_sycl.json)
+            {"yGPU", sizeof(void*)}, // pbrt::Spectra::y
+            {"zGPU", sizeof(void*)}  // pbrt::Spectra::z
         });
 
         try {

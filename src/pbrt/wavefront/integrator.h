@@ -57,6 +57,7 @@ static bool IsPortableRTKernel(const char *description) {
     static constexpr const char *portedKernels[] = {
         "Update film",
         "Reset ray queue",
+        "Generate camera rays",
     };
 
     for (const char *kernel : portedKernels)

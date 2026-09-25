@@ -15,7 +15,7 @@ namespace pbrt {
 static constexpr int BlueNoiseResolution = 128;
 static constexpr int NumBlueNoiseTextures = 48;
 
-extern PBRT_CONST uint16_t
+__attribute__((annotate("prt_ignore_global"))) extern PBRT_CONST uint16_t
     BlueNoiseTextures[NumBlueNoiseTextures][BlueNoiseResolution][BlueNoiseResolution];
 
 // Blue noise lookup functions

@@ -17,6 +17,10 @@
 #include <typeinfo>
 #include <utility>
 #include <vector>
+#include <cstdlib>
+#include <cstring>
+#include <type_traits>
+#include <queue>
 
 #ifdef PBRT_BUILD_PORTABLERT
 #include <portableRT/portableRT.hpp>
@@ -25,6 +29,33 @@ namespace pbrt {
 
 // The backend selected by GPUInit(); null before GPUInit.
 prt::Backend *PRTBackend();
+
+struct EnqueuedArgs {
+    void* data;
+    size_t size;
+};
+
+extern std::queue<EnqueuedArgs> enqueued_args;
+extern std::string instance_type;; // Ugly solution to avoid templated kernels.
+
+template <typename... Args>
+void enqueue_args(const Args&... args) {
+    static_assert((std::is_trivially_copyable_v<Args> && ...));
+
+    const size_t total_size = (sizeof(Args) + ...);
+    void* data = std::malloc(total_size);
+
+    size_t offset = 0;
+
+    auto copy_arg = [&](const auto& arg) {
+        std::memcpy(static_cast<char*>(data) + offset, &arg, sizeof(arg));
+        offset += sizeof(arg);
+    };
+
+    (copy_arg(args), ...);
+
+    enqueued_args.push({data, total_size});
+}
 
 // Uploads size bytes from src into the kernel-visible global named name,
 // which GPUInit has registered.
@@ -58,12 +89,33 @@ void GPUParallelFor(const char *description, int nItems, F func) {
             result.end()
         );
         result += "PRTKernel";
+        if(instance_type != "")
+            result += "_" + instance_type;
         return result;
     };
     std::vector<unsigned char> dummy_output(0);
-    struct EmptyArgs {};
-    EmptyArgs args{};
-    PRTBackend()->parallel_invoke(make_kernel_name(description), nItems, dummy_output, &args, sizeof(args), 0); //TODO: Make async?
+
+    struct EmptyArgs{};
+    EmptyArgs nil;
+
+    EnqueuedArgs args = enqueued_args.empty()
+                        ? EnqueuedArgs{&nil, 1}
+                        : enqueued_args.front();
+
+    if (!enqueued_args.empty()) {
+        enqueued_args.pop();
+    }
+
+    PRTBackend()->parallel_invoke(
+        make_kernel_name(description),
+        nItems,
+        dummy_output,
+        args.data,
+        args.size,
+        0
+    );
+    //std::free(args.data);
+    instance_type = "";
 
     std::cout << "Invoked parallel for: " << description << std::endl;
 #ifdef PBRT_DEBUG_BUILD

@@ -535,7 +535,7 @@ inline Float SRGBToLinear(float value) {
     return p / q * value;
 }
 
-extern PBRT_CONST Float SRGBToLinearLUT[256];
+__attribute__((annotate("prt_ignore_global"))) extern PBRT_CONST Float SRGBToLinearLUT[256];
 
 PBRT_CPU_GPU
 inline Float SRGB8ToLinear(uint8_t value) {

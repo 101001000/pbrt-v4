@@ -300,7 +300,7 @@ class ZSobolSampler {
     PBRT_CPU_GPU
     uint64_t GetSampleIndex() const {
         // Define the full set of 4-way permutations in _permutations_
-        static const uint8_t permutations[24][4] = {
+        __attribute__((annotate("prt_ignore_global"))) static const uint8_t permutations[24][4] = {
             {0, 1, 2, 3},
             {0, 1, 3, 2},
             {0, 2, 1, 3},

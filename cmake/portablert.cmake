@@ -35,7 +35,7 @@ find_package (portableRT CONFIG REQUIRED)
 # The installed kernel macros probe for CUDA/HIP to pick extra SYCL targets;
 # pin the target list to the Intel GPU/SPIR-V target that portableRT itself
 # was built for.
-set (KA_SYCL_COMPILE_TARGETS "spir64" CACHE STRING "portableRT SYCL kernel targets")
+set (KA_SYCL_COMPILE_TARGETS "nvptx64-nvidia-cuda" CACHE STRING "portableRT SYCL kernel targets")
 
 if (USE_SYCL)
   message (STATUS "portableRT: ${PORTABLERT_ROOT} (SYCL, DPC++: ${DPCPP_ROOT})")
