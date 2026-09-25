@@ -49,6 +49,37 @@ prt_kernel void ResetrayqueuePRTKernel(){
     //PBRT_DBG("Starting scanlines at y0 = %d, sample %d / %d\n", y0, sampleIndex, samplesPerPixel);
     cameraRayQueue->Reset();
 }
+
+prt_kernel void UpdatecameraraystatsPRTKernel(){
+    pbrt::RayQueue *cameraRayQueue = g_integrator->CurrentRayQueue(0);
+    g_integrator->stats->cameraRays += cameraRayQueue->Size();
+}
+
+prt_kernel void ResetqueuesbeforetracingraysPRTKernel(int wavefrontDepth){
+    // Reset queues before tracing rays
+    pbrt::RayQueue *nextQueue = g_integrator->NextRayQueue(wavefrontDepth);
+
+    nextQueue->Reset();
+    // Reset queues before tracing next batch of rays
+    if (g_integrator->mediumSampleQueue)
+        g_integrator->mediumSampleQueue->Reset();
+    if (g_integrator->mediumScatterQueue)
+        g_integrator->mediumScatterQueue->Reset();
+
+    if (g_integrator->escapedRayQueue)
+        g_integrator->escapedRayQueue->Reset();
+    g_integrator->hitAreaLightQueue->Reset();
+
+    g_integrator->basicEvalMaterialQueue->Reset();
+    g_integrator->universalEvalMaterialQueue->Reset();
+
+    if (g_integrator->bssrdfEvalQueue)
+        g_integrator->bssrdfEvalQueue->Reset();
+    if (g_integrator->subsurfaceScatterQueue)
+        g_integrator->subsurfaceScatterQueue->Reset();
+
+}
+
 #endif
 
 namespace pbrt {
@@ -394,6 +425,7 @@ Float WavefrontPathIntegrator::Render() {
                 for (int wavefrontDepth = 0; true; ++wavefrontDepth) {
                     // Reset queues before tracing rays
                     RayQueue *nextQueue = NextRayQueue(wavefrontDepth);
+                    enqueue_args(wavefrontDepth);
                     Do(
                        "Reset queues before tracing rays", PBRT_CPU_GPU_LAMBDA() {
                            nextQueue->Reset();

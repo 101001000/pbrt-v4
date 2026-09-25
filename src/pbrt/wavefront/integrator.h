@@ -58,6 +58,8 @@ static bool IsPortableRTKernel(const char *description) {
         "Update film",
         "Reset ray queue",
         "Generate camera rays",
+        "Update camera ray stats",
+        "Reset queues before tracing rays",
     };
 
     for (const char *kernel : portedKernels)

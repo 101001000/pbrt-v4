@@ -78,7 +78,7 @@ void GPUParallelFor(const char *description, int nItems, F func);
 
 template <typename F>
 void GPUParallelFor(const char *description, int nItems, F func) {
-    std::cout << "Invoking parallel for: " << description << std::endl;
+    //std::cout << "Invoking parallel for: " << description << std::endl;
 #ifdef PBRT_DEBUG_BUILD
     LOG_VERBOSE("Launching %s", description);
 #endif
