@@ -43,6 +43,8 @@ static inline bool IsPortableRTKernel(const char *description) {
         "Generate ray samples",
         "Handle escaped rays",
         "Handle emitters hit by indirect rays",
+        "Reset shadowRayQueue",
+        "Update indirect ray stats",
         PBRT_EVALUATE_MATERIALS(MATERIAL_BSDF_DESCRIPTION)
     };
 

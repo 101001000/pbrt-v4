@@ -53,6 +53,15 @@ prt_kernel void UpdatecameraraystatsPRTKernel(pbrt::RayQueue* cameraRayQueue){
     g_integrator->stats->cameraRays += cameraRayQueue->Size();
 }
 
+prt_kernel void ResetshadowRayQueuePRTKernel(int wavefrontDepth){
+    g_integrator->stats->shadowRays[wavefrontDepth] += g_integrator->shadowRayQueue->Size();
+    g_integrator->shadowRayQueue->Reset();
+}
+
+prt_kernel void UpdateindirectraystatsPRTKernel(pbrt::RayQueue* statsQueue, int wavefrontDepth){
+    g_integrator->stats->indirectRays[wavefrontDepth] += statsQueue->Size();
+}
+
 prt_kernel void ResetqueuesbeforetracingraysPRTKernel(pbrt::RayQueue *nextQueue){
     nextQueue->Reset();
     // Reset queues before tracing next batch of rays
@@ -562,6 +571,7 @@ Float WavefrontPathIntegrator::Render() {
                     if (wavefrontDepth > 0) {
                         // As above, with the indexing...
                         RayQueue *statsQueue = CurrentRayQueue(wavefrontDepth);
+                        enqueue_args(statsQueue, wavefrontDepth);
                         Do(
                            "Update indirect ray stats", PBRT_CPU_GPU_LAMBDA() {
                                stats->indirectRays[wavefrontDepth] += statsQueue->Size();
@@ -732,6 +742,8 @@ void WavefrontPathIntegrator::TraceShadowRays(int wavefrontDepth) {
     else
         aggregate->IntersectShadow(maxQueueSize, shadowRayQueue, &pixelSampleState);
     // Reset shadow ray queue
+
+    enqueue_args(wavefrontDepth);
     Do(
         "Reset shadowRayQueue", PBRT_CPU_GPU_LAMBDA() {
             stats->shadowRays[wavefrontDepth] += shadowRayQueue->Size();
