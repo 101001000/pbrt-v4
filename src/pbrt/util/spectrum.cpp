@@ -43,7 +43,13 @@ Float SpectrumToPhotometric(Spectrum s) {
     if (s.Is<RGBIlluminantSpectrum>())
         s = s.Cast<RGBIlluminantSpectrum>()->Illuminant();
 
-    return InnerProduct(&Spectra::Y(), s);
+    return InnerProduct(&Spectra::h_Y(), s);
+}
+
+XYZ h_SpectrumToXYZ(Spectrum s) {
+    return XYZ(InnerProduct(&Spectra::h_X(), s), InnerProduct(&Spectra::h_Y(), s),
+               InnerProduct(&Spectra::h_Z(), s)) /
+           CIE_Y_integral;
 }
 
 PBRT_CPU_GPU XYZ SpectrumToXYZ(Spectrum s) {

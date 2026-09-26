@@ -72,9 +72,19 @@ PBRT_CPU_GPU [[noreturn]] inline void LogFatal(LogLevel level, const char *file,
 #ifdef PBRT_IS_GPU_CODE
 
 #ifdef PRT_KERNEL
+#ifdef PRT_KERNEL_SYCL
+#define LOG_VERBOSE(...)
+#define LOG_ERROR(...)    
+#define LOG_FATAL(...)                         \
+    do {                                       \
+        assert(false && #__VA_ARGS__);        \
+        __builtin_trap();                     \
+    } while (false)
+#else
 #define LOG_VERBOSE(...)
 #define LOG_ERROR(...)    
 #define LOG_FATAL(...) 
+#endif
 #else
 
 extern __constant__ LogLevel LOGGING_LogLevelGPU;

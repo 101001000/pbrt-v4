@@ -4,9 +4,9 @@
 
 #include <pbrt/textures.h>
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/util.h>
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif  // PBRT_BUILD_GPU_RENDERER || PBRT_BUILD_PORTABLERT
 #include <pbrt/interaction.h>
 #include <pbrt/paramdict.h>
 #include <pbrt/util/color.h>
@@ -907,7 +907,7 @@ FloatTexture FloatScaledTexture::Create(const Transform &renderFromTexture,
                 imageCopy->MultiplyScale(cs);
                 return imageCopy;
             }
-#if defined(PBRT_BUILD_GPU_RENDERER)
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
             else if (GPUFloatImageTexture *gimage =
                          tex.CastOrNullptr<GPUFloatImageTexture>()) {
                 GPUFloatImageTexture *gimageCopy =

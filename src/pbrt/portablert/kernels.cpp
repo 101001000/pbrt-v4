@@ -1,3 +1,5 @@
+#include <gtest/gtest.h> // Required so float.h don't mix infinity
+
 #include <portableRT/kernel/device_common.hpp>
 
 #define PBRT_RESTRICT
@@ -11,6 +13,13 @@ pbrt::WavefrontPathIntegrator* g_integrator;
 #include <pbrt/util/transform.cpp>
 #include <pbrt/film.cpp>
 #include <pbrt/wavefront/film.cpp>
+
+#include <pbrt/util/sampling.cpp>
+#include <pbrt/shapes.cpp>
+#include <pbrt/lightsamplers.cpp>
+#include <pbrt/util/colorspace.cpp>
+#include <pbrt/lights.cpp>
+
 #include <pbrt/wavefront/integrator.cpp>
 #include <pbrt/util/bluenoise.cpp>
 #include <pbrt/util/pmj02tables.cpp>

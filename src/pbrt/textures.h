@@ -703,7 +703,7 @@ class GPUFloatImageTexture {
 
     PBRT_CPU_GPU
     Float Evaluate(TextureEvalContext ctx) const {
-#ifndef PBRT_IS_GPU_CODE
+#if !defined(PBRT_IS_GPU_CODE)
         LOG_FATAL("GPUSpectrumImageTexture::Evaluate called from CPU");
         return 0;
 #else
@@ -749,11 +749,16 @@ class GPUSpectrumImageTexture {
         return nullptr;
     }
 
+    PBRT_CPU_GPU
+    void MultiplyScale(Float s) {
+        LOG_FATAL("GPUSpectrumImageTexture::Scale not implemented");
+    }
     std::string ToString() const { return "GPUSpectrumImageTexture"; }
 };
 
 class GPUFloatImageTexture {
   public:
+    PBRT_CPU_GPU
     Float Evaluate(const TextureEvalContext &) const {
         LOG_FATAL("GPUFloatImageTexture::Evaluate called from CPU");
         return 0;
@@ -767,6 +772,10 @@ class GPUFloatImageTexture {
     }
 
     std::string ToString() const { return "GPUFloatImageTexture"; }
+    PBRT_CPU_GPU
+    void MultiplyScale(Float s) {
+        LOG_FATAL("GPUFloatImageTexture::Scale  Not implemented");
+    }
 };
 
 #endif  // PBRT_BUILD_GPU_RENDERER && __NVCC__

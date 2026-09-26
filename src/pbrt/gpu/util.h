@@ -38,6 +38,8 @@ static inline bool IsPortableRTKernel(const char *description) {
         "Update camera ray stats",
         "Reset queues before tracing rays",
         "Generate ray samples",
+        "Handle escaped rays",
+        "Handle emitters hit by indirect rays",
     };
 
     for (const char *kernel : ported_kernels)
@@ -59,14 +61,30 @@ template <typename... Args>
 void enqueue_args(const Args&... args) {
     static_assert((std::is_trivially_copyable_v<Args> && ...));
 
-    const size_t total_size = (sizeof(Args) + ...);
-    void* data = std::malloc(total_size);
+    constexpr size_t max_alignment = std::max({alignof(Args)...});
+
+    size_t total_size = 0;
+    auto add_arg_size = [&](auto const& arg) {
+        using T = std::decay_t<decltype(arg)>;
+        total_size = (total_size + alignof(T) - 1) & ~(alignof(T) - 1);
+        total_size += sizeof(T);
+    };
+
+    (add_arg_size(args), ...);
+
+    total_size = (total_size + max_alignment - 1) & ~(max_alignment - 1);
+
+    void* data = std::calloc(1, total_size);
 
     size_t offset = 0;
 
-    auto copy_arg = [&](const auto& arg) {
-        std::memcpy(static_cast<char*>(data) + offset, &arg, sizeof(arg));
-        offset += sizeof(arg);
+    auto copy_arg = [&](auto const& arg) {
+        using T = std::decay_t<decltype(arg)>;
+
+        offset = (offset + alignof(T) - 1) & ~(alignof(T) - 1);
+
+        std::memcpy(static_cast<char*>(data) + offset, &arg, sizeof(T));
+        offset += sizeof(T);
     };
 
     (copy_arg(args), ...);

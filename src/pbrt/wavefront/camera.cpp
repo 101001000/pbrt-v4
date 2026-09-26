@@ -20,10 +20,9 @@
 
 #define DEFINE_GENERATE_CAMERA_RAYS_KERNEL(sampler_type)                           \
 prt_kernel void GeneratecameraraysPRTKernel_##sampler_type(                        \
-    int y0, pbrt::Transform moving_from_camera, int sample_index) {                \
+    pbrt::RayQueue * ray_queue, int y0, pbrt::Transform moving_from_camera, int sample_index) {                \
                                                                                    \
     int pixel_index = global_idx;                                                  \
-    pbrt::RayQueue* ray_queue = g_integrator->CurrentRayQueue(0);                  \
                                                                                    \
     pbrt::Bounds2i pixel_bounds = g_integrator->film.PixelBounds();                \
     int x_resolution = pixel_bounds.pMax.x - pixel_bounds.pMin.x;                  \
@@ -102,7 +101,7 @@ template <typename ConcreteSampler>
 void WavefrontPathIntegrator::GenerateCameraRays(int y0, Transform movingFromCamera,
                                                  int sampleIndex) {
     RayQueue *rayQueue = CurrentRayQueue(0);
-    enqueue_args(y0, movingFromCamera, sampleIndex);
+    enqueue_args(rayQueue, y0, movingFromCamera, sampleIndex);
     instance_type = instantiation_name<ConcreteSampler>();
     ParallelFor(
         "Generate camera rays", maxQueueSize, PBRT_CPU_GPU_LAMBDA(int pixelIndex) {

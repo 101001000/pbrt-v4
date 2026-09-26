@@ -43,8 +43,14 @@ CMAKE="${CMAKE:-cmake}"
     -DHIPRT_ROOT=/homelocal/encalle_local/Desktop/CleanBuilds/hiprt/ \
     -Dembree_ROOT=/homelocal/encalle_local/Desktop/CleanBuilds/embree4.3.2-sycl \
     -DOptiX_ROOT=/homelocal/encalle_local/Desktop/CleanBuilds/NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64 \
-    -DPRT_GLOBAL_PROPAGATION=OFF \
     -DROCM_ROOT=/opt/rocm/ \
+    -DPRT_GLOBAL_PROPAGATION=OFF \
+    -DUSE_SYCL=ON \
+    -DUSE_EMBREE=OFF \
+    -DUSE_CUDA=OFF \
+    -DUSE_OPTIX=OFF \
+    -DUSE_HIP=OFF \
+    -DUSE_HIPRT=OFF \
     -S "${ROOT}"
 
 

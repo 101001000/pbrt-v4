@@ -7,7 +7,7 @@
 #include <pbrt/textures.h>
 #if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/util.h>
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif  // PBRT_BUILD_GPU_RENDERER || PBRT_BUILD_PORTABLERT
 #include <pbrt/interaction.h>
 #include <pbrt/options.h>
 #include <pbrt/paramdict.h>
@@ -153,20 +153,16 @@ pstd::vector<const TriangleMesh *> *Triangle::allMeshes;
 PBRT_GPU pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
 #endif
 
-#if defined(PBRT_BUILD_PORTABLERT) && defined(PRT_KERNEL)
-pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
+#if defined(PBRT_BUILD_PORTABLERT)
+pstd::vector<const pbrt::TriangleMesh *> *allTriangleMeshesGPU;
 #endif
 
 
 void Triangle::Init(Allocator alloc) {
     allMeshes = alloc.new_object<pstd::vector<const TriangleMesh *>>(alloc);
-#if defined(PBRT_BUILD_GPU_RENDERER)
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     if (Options->useGPU)
         PBRT_COPY_TO_SYMBOL(allTriangleMeshesGPU, &allMeshes, sizeof(allMeshes));
-#endif
-#if defined(PBRT_BUILD_PORTABLERT)
-    if (Options->useGPU)
-        PBRT_COPY_TO_SYMBOL(allTriangleMeshesGPU, &allMeshes, sizeof(allMeshes)); // in reality this is a global copy to.
 #endif
 }
 
@@ -363,7 +359,7 @@ PBRT_CPU_GPU bool Triangle::IntersectP(const Ray &ray, Float tMax) const {
 
 std::string Triangle::ToString() const {
     // Get triangle vertices in _p0_, _p1_, and _p2_
-    auto mesh = GetMesh();
+    auto mesh = h_GetMesh();
     const int *v = &mesh->vertexIndices[3 * triIndex];
     const Point3f &p0 = mesh->p[v[0]];
     const Point3f &p1 = mesh->p[v[1]];
@@ -1027,11 +1023,11 @@ pstd::vector<Shape> BilinearPatch::CreatePatches(const BilinearPatchMesh *mesh,
 
 pstd::vector<const BilinearPatchMesh *> *BilinearPatch::allMeshes;
 #if defined(PBRT_BUILD_GPU_RENDERER)
-PBRT_GPU pstd::vector<const BilinearPatchMesh *> *allBilinearMeshesGPU;
+PBRT_GPU pstd::vector<const pbrt::BilinearPatchMesh *> *allBilinearMeshesGPU;
 #endif
 
-#if defined(PBRT_BUILD_PORTABLERT) && defined(PBRT_IS_GPU_CODE)
-pstd::vector<const BilinearPatchMesh *> *allBilinearMeshesGPU;
+#if defined(PBRT_BUILD_PORTABLERT)
+pstd::vector<const pbrt::BilinearPatchMesh *> *allBilinearMeshesGPU;
 #endif
 
 

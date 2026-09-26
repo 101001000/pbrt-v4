@@ -40,6 +40,7 @@ SquareMatrix<3> ConvertRGBColorSpace(const RGBColorSpace &from, const RGBColorSp
     return to.RGBFromXYZ * from.XYZFromRGB;
 }
 
+PBRT_CPU_GPU
 RGBSigmoidPolynomial RGBColorSpace::ToRGBCoeffs(RGB rgb) const {
     DCHECK(rgb.r >= 0 && rgb.g >= 0 && rgb.b >= 0);
     return (*rgbToSpectrumTable)(ClampZero(rgb));

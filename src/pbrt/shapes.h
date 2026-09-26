@@ -815,8 +815,9 @@ inline Cylinder::Cylinder(const Transform *renderFromObject,
 #if defined(PBRT_BUILD_GPU_RENDERER) && defined(__CUDACC__)
 extern PBRT_GPU pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
 #endif
-#if defined(PBRT_BUILD_PORTABLERT) && defined(PRT_KERNEL)
-extern pstd::vector<const TriangleMesh *> *allTriangleMeshesGPU;
+
+#if defined(PBRT_BUILD_PORTABLERT)
+extern pstd::vector<const pbrt::TriangleMesh *> *allTriangleMeshesGPU;
 #endif
 
 // TriangleIntersection Definition
@@ -1187,6 +1188,10 @@ class Triangle {
 #endif
     }
 
+    const TriangleMesh *h_GetMesh() const {
+        return (*allMeshes)[meshIndex];
+    }
+
     // Triangle Private Members
     int meshIndex = -1, triIndex = -1;
     static pstd::vector<const TriangleMesh *> *allMeshes;
@@ -1271,7 +1276,7 @@ class Curve {
 extern PBRT_GPU pstd::vector<const BilinearPatchMesh *> *allBilinearMeshesGPU;
 #endif
 #if defined(PBRT_BUILD_PORTABLERT) && defined(PBRT_IS_GPU_CODE)
-extern pstd::vector<const BilinearPatchMesh *> *allBilinearMeshesGPU;
+extern pstd::vector<const pbrt::BilinearPatchMesh *> *allBilinearMeshesGPU;
 #endif
 
 

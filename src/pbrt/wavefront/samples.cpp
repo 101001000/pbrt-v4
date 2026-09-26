@@ -21,10 +21,7 @@
 
 #define DEFINE_GENERATE_RAY_SAMPLES_KERNEL(sampler_type)                           \
 prt_kernel void Generateraysamples_##sampler_type##PRTKernel( \
-    int wavefront_depth, int sample_index) {                                       \
-                                                                                   \
-    pbrt::RayQueue *ray_queue =                                                    \
-        g_integrator->CurrentRayQueue(wavefront_depth);                            \
+    pbrt::RayQueue *ray_queue, int sample_index) {                                       \
                                                                                    \
     int index = global_idx;                                                        \
     if (index >= ray_queue->Size())                                                \
@@ -89,7 +86,7 @@ void WavefrontPathIntegrator::GenerateRaySamples(int wavefrontDepth, int sampleI
     std::string desc = std::string("Generate ray samples - ") + ConcreteSampler::Name();
 
     RayQueue *rayQueue = CurrentRayQueue(wavefrontDepth);
-    enqueue_args(wavefrontDepth, sampleIndex);
+    enqueue_args(rayQueue, sampleIndex);
    // instance_type = instantiation_name<ConcreteSampler>();
     ForAllQueued(
         desc.c_str(), rayQueue, maxQueueSize, PBRT_CPU_GPU_LAMBDA(const RayWorkItem w) {

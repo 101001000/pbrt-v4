@@ -92,7 +92,7 @@ extern const RGBToSpectrumTable::CoefficientArray ACES2065_1ToSpectrumTable_Data
 const RGBToSpectrumTable *RGBToSpectrumTable::ACES2065_1;
 
 void RGBToSpectrumTable::Init(Allocator alloc) {
-#if defined(PBRT_BUILD_GPU_RENDERER)
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     if (Options->useGPU) {
         // sRGB
         float *sRGBToSpectrumTableScalePtr =

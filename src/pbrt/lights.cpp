@@ -9,9 +9,9 @@
 #include <pbrt/lights.h>
 
 #include <pbrt/cameras.h>
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
 #include <pbrt/gpu/memory.h>
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif  // PBRT_BUILD_GPU_RENDERER || PRT_BUILD_PORTABLERT
 #include <pbrt/paramdict.h>
 #include <pbrt/samplers.h>
 #include <pbrt/shapes.h>
@@ -84,7 +84,7 @@ const DenselySampledSpectrum *LightBase::LookupSpectrum(Spectrum s) {
     mutex.lock();
     if (!spectrumCache)
         spectrumCache = new InternCache<DenselySampledSpectrum>(
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
             Options->useGPU ? Allocator(&CUDATrackedMemoryResource::singleton) :
 #endif
                             Allocator{});
@@ -1579,7 +1579,7 @@ Light Light::Create(const std::string &name, const ParameterDictionary &paramete
                 if (!L[0].Is<RGBIlluminantSpectrum>())
                     Warning(loc, "Converting non-RGB \"L\" parameter to RGB so that a "
                                  "portal light can be used.");
-                XYZ xyz = SpectrumToXYZ(L[0]);
+                XYZ xyz = h_SpectrumToXYZ(L[0]);
                 RGB rgb = RGBColorSpace::sRGB->ToRGB(xyz);
 
                 int res = 1;  // happily, this all just works.

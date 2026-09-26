@@ -9,6 +9,7 @@
 #include <pbrt/util/error.h>
 #include <pbrt/util/log.h>
 #include <pbrt/util/print.h>
+#include <pbrt/shapes.h>
 
 #include <algorithm>
 #include <cstring>
@@ -50,7 +51,9 @@ void GPUInit() {
             {"OptionsGPU", sizeof(pbrt::BasicPBRTOptions)},
             {"xGPU", sizeof(void*)}, // pbrt::Spectra::x (propagated global, see data_sycl.json)
             {"yGPU", sizeof(void*)}, // pbrt::Spectra::y
-            {"zGPU", sizeof(void*)}  // pbrt::Spectra::z
+            {"zGPU", sizeof(void*)},  // pbrt::Spectra::z
+            {"allBilinearMeshesGPU", sizeof(pstd::vector<const pbrt::BilinearPatchMesh *>*)},
+            {"allTriangleMeshesGPU", sizeof(pstd::vector<const pbrt::TriangleMesh *>*)}
         });
 
         try {

@@ -85,6 +85,7 @@ DenselySampledSpectrum D(Float T, Allocator alloc);
 
 Float SpectrumToPhotometric(Spectrum s);
 
+XYZ h_SpectrumToXYZ(Spectrum s);
 PBRT_CPU_GPU XYZ SpectrumToXYZ(Spectrum s);
 
 // SampledSpectrum Definition
@@ -714,6 +715,22 @@ inline SampledSpectrum Lerp(Float t, const SampledSpectrum &s1,
 namespace Spectra {
 
 void Init(Allocator alloc);
+
+inline const DenselySampledSpectrum &h_X() {
+    extern DenselySampledSpectrum *x;
+    return *x;
+}
+
+inline const DenselySampledSpectrum &h_Y() {
+    extern DenselySampledSpectrum *y;
+    return *y;
+}
+
+inline const DenselySampledSpectrum &h_Z() {
+    extern DenselySampledSpectrum *z;
+    return *z;
+}
+
 
 PBRT_CPU_GPU
 inline const DenselySampledSpectrum &X() {

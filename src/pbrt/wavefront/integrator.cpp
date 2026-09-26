@@ -44,21 +44,16 @@
 #endif  // PBRT_BUILD_GPU_RENDERER
 
 #ifdef PRT_KERNEL
-prt_kernel void ResetrayqueuePRTKernel(){
-    pbrt::RayQueue *cameraRayQueue = g_integrator->CurrentRayQueue(0);
+prt_kernel void ResetrayqueuePRTKernel(pbrt::RayQueue* cameraRayQueue){
     //PBRT_DBG("Starting scanlines at y0 = %d, sample %d / %d\n", y0, sampleIndex, samplesPerPixel);
     cameraRayQueue->Reset();
 }
 
-prt_kernel void UpdatecameraraystatsPRTKernel(){
-    pbrt::RayQueue *cameraRayQueue = g_integrator->CurrentRayQueue(0);
+prt_kernel void UpdatecameraraystatsPRTKernel(pbrt::RayQueue* cameraRayQueue){
     g_integrator->stats->cameraRays += cameraRayQueue->Size();
 }
 
-prt_kernel void ResetqueuesbeforetracingraysPRTKernel(int wavefrontDepth){
-    // Reset queues before tracing rays
-    pbrt::RayQueue *nextQueue = g_integrator->NextRayQueue(wavefrontDepth);
-
+prt_kernel void ResetqueuesbeforetracingraysPRTKernel(pbrt::RayQueue *nextQueue){
     nextQueue->Reset();
     // Reset queues before tracing next batch of rays
     if (g_integrator->mediumSampleQueue)
@@ -78,6 +73,111 @@ prt_kernel void ResetqueuesbeforetracingraysPRTKernel(int wavefrontDepth){
     if (g_integrator->subsurfaceScatterQueue)
         g_integrator->subsurfaceScatterQueue->Reset();
 
+}
+
+prt_kernel void HandleescapedraysPRTKernel() {
+
+    int index = global_idx;
+
+    if (index >= g_integrator->escapedRayQueue->Size())
+        return;
+
+    const pbrt::EscapedRayWorkItem w =
+        (*g_integrator->escapedRayQueue)[index];
+
+    // Compute weighted radiance for escaped ray
+    pbrt::SampledSpectrum L(0.f);
+
+    for (const auto &light : *g_integrator->infiniteLights) {
+        if (pbrt::SampledSpectrum Le =
+                light.Le(pbrt::Ray(w.rayo, w.rayd), w.lambda);
+            Le) {
+            // Compute path radiance contribution from infinite light
+            //PBRT_DBG("L %f %f %f %f beta %f %f %f %f Le %f %f %f %f\n",
+            //         L[0], L[1], L[2], L[3],
+            //         w.beta[0], w.beta[1], w.beta[2], w.beta[3],
+            //         Le[0], Le[1], Le[2], Le[3]);
+
+            //PBRT_DBG("depth %d specularBounce %d pdf uni %f %f %f %f "
+            //         "pdf nee %f %f %f %f\n",
+            //         w.depth, w.specularBounce,
+            //         w.r_u[0], w.r_u[1], w.r_u[2], w.r_u[3],
+            //         w.r_l[0], w.r_l[1], w.r_l[2], w.r_l[3]);
+
+            if (w.depth == 0 || w.specularBounce) {
+                L += w.beta * Le / w.r_u.Average();
+            } else {
+                // Compute MIS-weighted radiance contribution from infinite light
+                pbrt::LightSampleContext ctx = w.prevIntrCtx;
+                pbrt::Float light_choice_pdf =
+                    g_integrator->lightSampler.PMF(ctx, light);
+
+                pbrt::SampledSpectrum r_l =
+                    w.r_l * light_choice_pdf *
+                    light.PDF_Li(ctx, w.rayd, true);
+
+                L += w.beta * Le / (w.r_u + r_l).Average();
+            }
+        }
+    }
+
+    // Update pixel radiance if ray's radiance is nonzero
+    if (L) {
+        //PBRT_DBG("Added L %f %f %f %f for escaped ray pixel index %d\n",
+        //         L[0], L[1], L[2], L[3], w.pixelIndex);
+
+        L += g_integrator->pixelSampleState.L[w.pixelIndex];
+        g_integrator->pixelSampleState.L[w.pixelIndex] = L;
+    }
+}
+
+prt_kernel void HandleemittershitbyindirectraysPRTKernel() {
+    int index = global_idx;
+
+    if (index >= g_integrator->hitAreaLightQueue->Size())
+        return;
+
+    const pbrt::HitAreaLightWorkItem w =
+        (*g_integrator->hitAreaLightQueue)[index];
+
+    // Find emitted radiance from surface that ray hit
+    pbrt::SampledSpectrum Le =
+        w.areaLight.L(w.p, w.n, w.uv, w.wo, w.lambda);
+
+    if (!Le)
+        return;
+
+    //PBRT_DBG("Got Le %f %f %f %f from hit area light at depth %d\n",
+    //         Le[0], Le[1], Le[2], Le[3], w.depth);
+
+    // Compute area light's weighted radiance contribution to the path
+    pbrt::SampledSpectrum L(0.f);
+
+    if (w.depth == 0 || w.specularBounce) {
+        L = w.beta * Le / w.r_u.Average();
+    } else {
+        // Compute MIS-weighted radiance contribution from area light
+        pbrt::Vector3f wi = -w.wo;
+        pbrt::LightSampleContext ctx = w.prevIntrCtx;
+
+        pbrt::Float light_choice_pdf =
+            g_integrator->lightSampler.PMF(ctx, w.areaLight);
+
+        pbrt::Float light_pdf =
+            light_choice_pdf * w.areaLight.PDF_Li(ctx, wi, true);
+
+        pbrt::SampledSpectrum r_u = w.r_u;
+        pbrt::SampledSpectrum r_l = w.r_l * light_pdf;
+
+        L = w.beta * Le / (r_u + r_l).Average();
+    }
+
+    //PBRT_DBG("Added L %f %f %f %f for pixel index %d\n",
+    //         L[0], L[1], L[2], L[3], w.pixelIndex);
+
+    // Update _L_ in _PixelSampleState_ for area light's radiance
+    L += g_integrator->pixelSampleState.L[w.pixelIndex];
+    g_integrator->pixelSampleState.L[w.pixelIndex] = L;
 }
 
 #endif
@@ -405,6 +505,7 @@ Float WavefrontPathIntegrator::Render() {
                  y0 += scanlinesPerPass) {
                 // Generate camera rays for current scanline range
                 RayQueue *cameraRayQueue = CurrentRayQueue(0);
+                enqueue_args(cameraRayQueue);
                 Do(
                    "Reset ray queue", PBRT_CPU_GPU_LAMBDA() {
                        PBRT_DBG("Starting scanlines at y0 = %d, sample %d / %d\n", y0,
@@ -417,6 +518,7 @@ Float WavefrontPathIntegrator::Render() {
                     cameraMotion =
                         renderFromCamera * gui->GetCameraTransform() * cameraFromRender;
                 GenerateCameraRays(y0, cameraMotion, sampleIndex);
+                enqueue_args(cameraRayQueue);
                 Do(
                    "Update camera ray stats",
                    PBRT_CPU_GPU_LAMBDA() { stats->cameraRays += cameraRayQueue->Size(); });
@@ -425,7 +527,7 @@ Float WavefrontPathIntegrator::Render() {
                 for (int wavefrontDepth = 0; true; ++wavefrontDepth) {
                     // Reset queues before tracing rays
                     RayQueue *nextQueue = NextRayQueue(wavefrontDepth);
-                    enqueue_args(wavefrontDepth);
+                    enqueue_args(nextQueue);
                     Do(
                        "Reset queues before tracing rays", PBRT_CPU_GPU_LAMBDA() {
                            nextQueue->Reset();
@@ -532,10 +634,10 @@ Float WavefrontPathIntegrator::Render() {
 
     progress.Done();
 
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     if (Options->useGPU)
         GPUWait();
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif  // PBRT_BUILD_GPU_RENDERER || PBRT_BUILD_PORTABLERT
     Float seconds = timer.ElapsedSeconds();
 
     // Shut down display server thread, if active
