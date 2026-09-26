@@ -1,5 +1,17 @@
-#pragma once 
+#pragma once
 
+
+namespace pbrt {
+
+class PMJ02BNSampler;
+class IndependentSampler;
+class StratifiedSampler;
+class HaltonSampler;
+class PaddedSobolSampler;
+class SobolSampler;
+class ZSobolSampler;
+
+}
 
 #define PBRT_SAMPLERS(X)                  \
     X(PMJ02BNSampler)                     \
@@ -10,15 +22,31 @@
     X(SobolSampler)                       \
     X(ZSobolSampler)
 
-template <typename T>
-inline const char* instantiation_name();
+#define PBRT_EVALUATE_MATERIALS(X)        \
+    X(CoatedDiffuseMaterial)              \
+    X(CoatedConductorMaterial)            \
+    X(ConductorMaterial)                  \
+    X(DielectricMaterial)                 \
+    X(DiffuseMaterial)                    \
+    X(DiffuseTransmissionMaterial)        \
+    X(HairMaterial)                       \
+    X(MeasuredMaterial)                   \
+    X(SubsurfaceMaterial)                 \
+    X(ThinDielectricMaterial)
 
-#define DEFINE_INSTANTIATION_NAME(type)             \
-    template <>                                     \
-    inline const char* instantiation_name<pbrt::type>() {  \
-        return #type;                               \
+template <typename T>
+inline const char *instantiation_name();
+
+template <typename T, typename U>
+inline const char *instantiation_name();
+
+#define DEFINE_INSTANTIATION_NAME(type)                   \
+    template <>                                           \
+    inline const char *instantiation_name<pbrt::type>() { \
+        return #type;                                     \
     }
 
 PBRT_SAMPLERS(DEFINE_INSTANTIATION_NAME)
 
 #undef DEFINE_INSTANTIATION_NAME
+

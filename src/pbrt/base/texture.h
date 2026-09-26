@@ -50,6 +50,7 @@ class FloatTexture
 
     std::string ToString() const;
 
+    template <int T = 2>
     PBRT_CPU_GPU inline Float Evaluate(TextureEvalContext ctx) const;
 };
 
@@ -89,6 +90,7 @@ class SpectrumTexture
 
     std::string ToString() const;
 
+    template <int T = 2>
     PBRT_CPU_GPU inline SampledSpectrum Evaluate(TextureEvalContext ctx,
                                                  SampledWavelengths lambda) const;
 };

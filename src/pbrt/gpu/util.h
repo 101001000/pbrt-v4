@@ -24,6 +24,7 @@
 
 #ifdef PBRT_BUILD_PORTABLERT
 #include <portableRT/portableRT.hpp>
+#include <pbrt/portablert/samplers.h>
 
 namespace pbrt {
 
@@ -31,6 +32,8 @@ namespace pbrt {
 prt::Backend *PRTBackend();
 
 static inline bool IsPortableRTKernel(const char *description) {
+#define MATERIAL_BSDF_DESCRIPTION(type) #type " + BxDF eval (",
+
     static constexpr const char *ported_kernels[] = {
         "Update film",
         "Reset ray queue",
@@ -40,7 +43,10 @@ static inline bool IsPortableRTKernel(const char *description) {
         "Generate ray samples",
         "Handle escaped rays",
         "Handle emitters hit by indirect rays",
+        PBRT_EVALUATE_MATERIALS(MATERIAL_BSDF_DESCRIPTION)
     };
+
+#undef MATERIAL_BSDF_DESCRIPTION
 
     for (const char *kernel : ported_kernels)
         if (strncmp(description, kernel, strlen(kernel)) == 0)
@@ -123,7 +129,11 @@ void GPUParallelFor(const char *description, int nItems, F func) {
         std::replace(result.begin(), result.end(), '-', '_');
 
         result.erase(
-            std::remove(result.begin(), result.end(), ' '),
+            std::remove_if(
+                result.begin(), result.end(),
+                [](char c) {
+                    return c == ' ' || c == '+' || c == '(' || c == ')';
+                }),
             result.end()
         );
 

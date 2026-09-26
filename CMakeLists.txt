@@ -938,6 +938,13 @@ target_link_libraries(
 )
 
 if (PBRT_BUILD_PORTABLERT)
+  set_property (TARGET Ptex_static PROPERTY POSITION_INDEPENDENT_CODE ON)
+  set_property (
+    TARGET pbrt_lib
+    APPEND PROPERTY PRT_KERNEL_EXTRA_LINK_LIBRARIES
+    Ptex_static
+  )
+
   # Plain-signature linking: prt_set_kernels adds the localized kernel
   # libraries through the same interface.
   target_link_libraries (pbrt_lib portableRT::portableRT)

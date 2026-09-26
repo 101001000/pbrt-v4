@@ -32,4 +32,10 @@ pbrt::WavefrontPathIntegrator* g_integrator;
 
 #include <pbrt/wavefront/samples.cpp>
 
+#include <pbrt/util/scattering.cpp>
+#include <pbrt/util/noise.cpp>
+#include <pbrt/bxdfs.cpp>
+#include <pbrt/textures.cpp>
+#include <pbrt/materials.cpp>
+#include <pbrt/wavefront/surfscatter.cpp>
 

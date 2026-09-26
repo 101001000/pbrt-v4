@@ -18,7 +18,7 @@ inline Float NoiseWeight(Float t);
 
 // Perlin Noise Data
 static constexpr int NoisePermSize = 256;
-static PBRT_CONST int NoisePerm[2 * NoisePermSize] = {
+static constexpr int NoisePerm[2 * NoisePermSize] = {
     151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103,
     30, 69, 142,
     // Remainder of the noise permutation table

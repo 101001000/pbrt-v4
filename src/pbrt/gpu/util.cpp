@@ -53,7 +53,8 @@ void GPUInit() {
             {"yGPU", sizeof(void*)}, // pbrt::Spectra::y
             {"zGPU", sizeof(void*)},  // pbrt::Spectra::z
             {"allBilinearMeshesGPU", sizeof(pstd::vector<const pbrt::BilinearPatchMesh *>*)},
-            {"allTriangleMeshesGPU", sizeof(pstd::vector<const pbrt::TriangleMesh *>*)}
+            {"allTriangleMeshesGPU", sizeof(pstd::vector<const pbrt::TriangleMesh *>*)},
+            {"RGBColorSpace_sRGB", sizeof(void*)},
         });
 
         try {
