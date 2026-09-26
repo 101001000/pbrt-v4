@@ -1,3 +1,4 @@
+#ifndef DISABLE_PRT_KERNELS
 #include <gtest/gtest.h> // Required so float.h don't mix infinity
 
 #include <portableRT/kernel/device_common.hpp>
@@ -39,3 +40,5 @@ pbrt::WavefrontPathIntegrator* g_integrator;
 #include <pbrt/materials.cpp>
 #include <pbrt/wavefront/surfscatter.cpp>
 
+
+#endif  // DISABLE_PRT_KERNELS

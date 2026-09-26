@@ -18,7 +18,7 @@ inline Float NoiseWeight(Float t);
 
 // Perlin Noise Data
 static constexpr int NoisePermSize = 256;
-static constexpr int NoisePerm[2 * NoisePermSize] = {
+__attribute__((annotate("prt_ignore_global"))) static PBRT_CONST int NoisePerm[2 * NoisePermSize] = {
     151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103,
     30, 69, 142,
     // Remainder of the noise permutation table
@@ -53,6 +53,7 @@ static constexpr int NoisePerm[2 * NoisePermSize] = {
 };
 
 // Noise Function Definitions
+PBRT_CPU_GPU
 Float Noise(Float x, Float y, Float z) {
     // Compute noise cell coordinates and offsets
     // Avoid overflow when computing deltas if the coordinates are too large to store in
@@ -87,10 +88,12 @@ Float Noise(Float x, Float y, Float z) {
     return Lerp(wz, y0, y1);
 }
 
+PBRT_CPU_GPU
 Float Noise(Point3f p) {
     return Noise(p.x, p.y, p.z);
 }
 
+PBRT_CPU_GPU
 inline Float Grad(int x, int y, int z, Float dx, Float dy, Float dz) {
     int h = NoisePerm[NoisePerm[NoisePerm[x] + y] + z];
     h &= 15;
@@ -98,11 +101,12 @@ inline Float Grad(int x, int y, int z, Float dx, Float dy, Float dz) {
     Float v = h < 4 || h == 12 || h == 13 ? dy : dz;
     return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
 }
-
+PBRT_CPU_GPU
 inline Float NoiseWeight(Float t) {
     return 6 * Pow<5>(t) - 15 * Pow<4>(t) + 10 * Pow<3>(t);
 }
 
+PBRT_CPU_GPU
 Vector3f DNoise(Point3f p) {
     Float delta = .01f;
     Float n = Noise(p);
@@ -111,6 +115,7 @@ Vector3f DNoise(Point3f p) {
     return (noiseDelta - Point3f(n, n, n)) / delta;
 }
 
+PBRT_CPU_GPU
 Float FBm(Point3f p, Vector3f dpdx, Vector3f dpdy, Float omega, int maxOctaves) {
     // Compute number of octaves for antialiased FBm
     Float len2 = std::max(LengthSquared(dpdx), LengthSquared(dpdy));
@@ -130,6 +135,7 @@ Float FBm(Point3f p, Vector3f dpdx, Vector3f dpdy, Float omega, int maxOctaves) 
     return sum;
 }
 
+PBRT_CPU_GPU
 Float Turbulence(Point3f p, Vector3f dpdx, Vector3f dpdy, Float omega, int maxOctaves) {
     // Compute number of octaves for antialiased FBm
     Float len2 = std::max(LengthSquared(dpdx), LengthSquared(dpdy));

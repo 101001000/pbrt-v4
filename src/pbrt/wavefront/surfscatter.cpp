@@ -28,6 +28,7 @@
 namespace pbrt {
 
 template <typename ConcreteMaterial, typename TextureEvaluator>
+PBRT_CPU_GPU
 inline void EvaluateMaterialBSDFKernelImpl(
     WorkQueue<MaterialEvalWorkItem<ConcreteMaterial>> *queue, RayQueue *nextRayQueue,
     Transform movingFromCamera, int queueIndex) {

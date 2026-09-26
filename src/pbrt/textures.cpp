@@ -180,6 +180,7 @@ std::string SpectrumBilerpTexture::ToString() const {
 }
 
 // CheckerboardTexture Function Definitions
+PBRT_CPU_GPU
 Float Checkerboard(TextureEvalContext ctx, TextureMapping2D map2D,
                    TextureMapping3D map3D) {
     // Define 1D checkerboard filtered integral functions
@@ -285,6 +286,7 @@ std::string SpectrumCheckerboardTexture::ToString() const {
 }
 
 // InsidePolkaDot Function Definition
+PBRT_CPU_GPU
 bool InsidePolkaDot(Point2f st) {
     // Compute cell indices (_sCell_,_tCell_ for dots
     int sCell = pstd::floor(st[0] + .5f), tCell = pstd::floor(st[1] + .5f);
@@ -1548,10 +1550,12 @@ SpectrumTexture SpectrumTexture::Create(const std::string &name,
 }
 
 // UniversalTextureEvaluator Method Definitions
+PBRT_CPU_GPU
 Float UniversalTextureEvaluator::operator()(FloatTexture tex, TextureEvalContext ctx) {
     return tex.Evaluate(ctx);
 }
 
+PBRT_CPU_GPU
 SampledSpectrum UniversalTextureEvaluator::operator()(SpectrumTexture tex,
                                                       TextureEvalContext ctx,
                                                       SampledWavelengths lambda) {

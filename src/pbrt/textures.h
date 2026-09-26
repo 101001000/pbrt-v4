@@ -757,6 +757,7 @@ class GPUFloatImageTexture {
 
 class GPUSpectrumImageTexture {
   public:
+    PBRT_CPU_GPU
     SampledSpectrum Evaluate(TextureEvalContext ctx, SampledWavelengths lambda) const {
         LOG_FATAL("GPUSpectrumImageTexture::Evaluate called from CPU");
         return SampledSpectrum(0);
