@@ -33,28 +33,21 @@ std::queue<EnqueuedArgs> enqueued_args;
 std::string instance_type = "";
 
 void GPUInit() {
-    // Prefer an accelerator; the CPU backend is the last resort so that the
-    // portableRT path can still render on machines without one.
     prt::Backend *candidate = nullptr;
     for (prt::Backend *backend : prt::available_backends())
         if (candidate == nullptr || backend->name() != "CPU")
             candidate = backend;
 
     if (candidate != nullptr) {
-        // Globals consumed by the integrated kernels; registered before the
-        // backend initializes so that they get blob slots. The first group
-        // must match the kernel TU's generated layout order (referenced
-        // globals in sorted order, __traversable implicitly first); the rest
-        // are uploaded by their owners through PBRT_COPY_TO_SYMBOL.
         prt::kernelapi_init({
             {"g_integrator", sizeof(pbrt::WavefrontPathIntegrator*)},
             {"OptionsGPU", sizeof(pbrt::BasicPBRTOptions)},
-            {"xGPU", sizeof(void*)}, // pbrt::Spectra::x (propagated global, see data_sycl.json)
-            {"yGPU", sizeof(void*)}, // pbrt::Spectra::y
-            {"zGPU", sizeof(void*)},  // pbrt::Spectra::z
+            {"xGPU", sizeof(void*)},
+            {"yGPU", sizeof(void*)},
+            {"zGPU", sizeof(void*)}, 
+            {"RGBColorSpace_sRGB", sizeof(void*)},
             {"allBilinearMeshesGPU", sizeof(pstd::vector<const pbrt::BilinearPatchMesh *>*)},
             {"allTriangleMeshesGPU", sizeof(pstd::vector<const pbrt::TriangleMesh *>*)},
-            {"RGBColorSpace_sRGB", sizeof(void*)},
         });
 
         try {
@@ -70,12 +63,6 @@ void GPUInit() {
     if (selectedBackend == nullptr)
         LOG_FATAL("No usable portableRT backend found.");
 
-    // Restrict ourselves to the BVH layout of the integrated kernels.
-    for (int i = 0; i < selectedBackend->bvh_layout_count(); ++i) {
-        selectedBackend->select_bvh_layout(i);
-        if (selectedBackend->get_bvh_layout()->name == "native_bvh2")
-            break;
-    }
 
     LOG_VERBOSE("portableRT backend %s (%s), BVH layout %s", selectedBackend->name().c_str(),
                 selectedBackend->device_name().c_str(),

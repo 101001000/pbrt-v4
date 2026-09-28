@@ -47,8 +47,8 @@ CMAKE="${CMAKE:-cmake}"
     -DPRT_GLOBAL_PROPAGATION=OFF \
     -DUSE_SYCL=ON \
     -DUSE_EMBREE=OFF \
-    -DUSE_CUDA=OFF \
-    -DUSE_OPTIX=OFF \
+    -DUSE_CUDA=ON \
+    -DUSE_OPTIX=ON \
     -DUSE_HIP=OFF \
     -DUSE_HIPRT=OFF \
     -S "${ROOT}"

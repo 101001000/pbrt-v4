@@ -14,6 +14,7 @@
 #endif  // PBRT_BUILD_GPU_RENDERER
 #ifdef PBRT_BUILD_PORTABLERT
 #include <pbrt/gpu/memory.h>
+#include <pbrt/gpu/portablert/aggregate.h>
 #endif  // PBRT_BUILD_PORTABLERT
 #include <pbrt/lights.h>
 #include <pbrt/lightsamplers.h>
@@ -313,10 +314,8 @@ WavefrontPathIntegrator::WavefrontPathIntegrator(
         aggregate = new OptiXAggregate(scene, mr, textures, shapeIndexToAreaLights, media,
                                        namedMaterials, materials);
 #elif defined(PBRT_BUILD_PORTABLERT) || defined(PRT_KERNEL)
-        // The portableRT backend takes over aggregation and traversal in a
-        // later step; the CPU aggregate keeps --gpu renders correct meanwhile.
-        aggregate = new CPUAggregate(scene, textures, shapeIndexToAreaLights, media,
-                                     namedMaterials, materials);
+        aggregate = new PortableRTAggregate(
+            scene, textures, shapeIndexToAreaLights, media, namedMaterials, materials);
 #else
         LOG_FATAL("Options->useGPU was set without PBRT_BUILD_GPU_RENDERER enabled");
 #endif

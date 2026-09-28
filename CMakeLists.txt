@@ -951,6 +951,7 @@ if (PBRT_BUILD_PORTABLERT)
   target_sources (pbrt_lib PRIVATE
     src/pbrt/gpu/memory.cpp
     src/pbrt/gpu/util.cpp
+    src/pbrt/gpu/portablert/aggregate.cpp
   )
   prt_set_kernels (pbrt_lib src/pbrt/portablert/kernels.cpp)
   #prt_add_sycl_runtime_libraries (pbrt_lib)

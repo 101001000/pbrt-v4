@@ -10,11 +10,6 @@
 
 #ifdef PRT_KERNEL
 
-prt_kernel void dummy(){
-    auto hit = prt::closest_hit(prt::Ray());
-    auto a = pbrt::allTriangleMeshesGPU;
-    auto b = pbrt::allBilinearMeshesGPU;
-}
 
 prt_kernel void UpdatefilmPRTKernel(){
 

@@ -13,6 +13,7 @@
 #include <pbrt/wavefront/intersect.h>
 
 #include <portableRT/portableRT.hpp>
+#include <type_traits>
 #ifdef PRT_KERNEL
 #include <portableRT/kernel/device_common.hpp>
 #endif
@@ -21,6 +22,33 @@ namespace pbrt {
 
 
 namespace {
+
+// Must match the argument layout emitted by the PortableRT kernel rewriter.
+// Keep this package local to the host invocation: using enqueued_args here can
+// accidentally consume an argument packet belonging to another kernel.
+struct PortableRTIntersectClosestArgs {
+    const RayQueue *rayQueue;
+    EscapedRayQueue *escapedRayQueue;
+    HitAreaLightQueue *hitAreaLightQueue;
+    MaterialEvalQueue *basicEvalMaterialQueue;
+    MaterialEvalQueue *universalEvalMaterialQueue;
+    MediumSampleQueue *mediumSampleQueue;
+    RayQueue *nextRayQueue;
+    const PortableRTTriangleRecord *triangleRecords;
+    const int *instanceOffsets;
+};
+
+static_assert(std::is_trivially_copyable_v<PortableRTIntersectClosestArgs>);
+static_assert(sizeof(PortableRTIntersectClosestArgs) == 9 * sizeof(void *));
+
+// Must match the argument layout emitted by the PortableRT kernel rewriter.
+struct PortableRTIntersectShadowArgs {
+    ShadowRayQueue *shadowRayQueue;
+    SOA<PixelSampleState> *pixelSampleState;
+};
+
+static_assert(std::is_trivially_copyable_v<PortableRTIntersectShadowArgs>);
+static_assert(sizeof(PortableRTIntersectShadowArgs) == 2 * sizeof(void *));
 
 static bool IsTriangleShape(const ShapeSceneEntity &shape) {
     return shape.name == "trianglemesh" || shape.name == "plymesh";
@@ -48,7 +76,7 @@ PortableRTAggregate::PortableRTAggregate(
           &CUDATrackedMemoryResource::singleton)),
       instanceOffsets(pstd::pmr::polymorphic_allocator<int>(
           &CUDATrackedMemoryResource::singleton)) {
-    Allocator alloc;
+    Allocator alloc(&CUDATrackedMemoryResource::singleton);
     std::vector<prt::BLASInstance> blases;
 
     for (size_t shapeIndex = 0; shapeIndex < scene.shapes.size(); ++shapeIndex) {
@@ -119,8 +147,8 @@ PortableRTAggregate::PortableRTAggregate(
                 areaLight = (*areaLights)[triIndex];
 
             triangleRecords.push_back(
-                PortableRTTriangleRecord{shapes[triIndex], material, areaLight,
-                                         mediumInterface});
+                PortableRTTriangleRecord{*shapes[triIndex].CastOrNullptr<Triangle>(),
+                                         material, areaLight, mediumInterface});
         }
 
         // One BLAS per PBRT mesh preserves instance_id -> mesh/shape mapping.
@@ -128,7 +156,7 @@ PortableRTAggregate::PortableRTAggregate(
     }
 
     if (blases.empty()) {
-        LOG_WARNING("PortableRTAggregate: scene contains no triangle meshes");
+        LOG_ERROR("PortableRTAggregate: scene contains no triangle meshes");
         return;
     }
 
@@ -143,25 +171,31 @@ void PortableRTAggregate::IntersectClosest(
     HitAreaLightQueue *hitAreaLightQueue, MaterialEvalQueue *basicEvalMaterialQueue,
     MaterialEvalQueue *universalEvalMaterialQueue, MediumSampleQueue *mediumSampleQueue,
     RayQueue *nextRayQueue) const {
-    enqueue_args(rayQueue, escapedRayQueue, hitAreaLightQueue, basicEvalMaterialQueue,
-                 universalEvalMaterialQueue, mediumSampleQueue, nextRayQueue,
-                 triangleRecords.data(), instanceOffsets.data());
 
-    if (enqueued_args.empty())
-        LOG_FATAL("PortableRTAggregate: missing closest-hit kernel arguments");
-
-    const EnqueuedArgs args = enqueued_args.front();
-    enqueued_args.pop();
+    const PortableRTIntersectClosestArgs args{
+        rayQueue,
+        escapedRayQueue,
+        hitAreaLightQueue,
+        basicEvalMaterialQueue,
+        universalEvalMaterialQueue,
+        mediumSampleQueue,
+        nextRayQueue,
+        triangleRecords.data(),
+        instanceOffsets.data()};
 
     std::vector<unsigned char> output;
     PRTBackend()->parallel_invoke(
-        "PortableRTintersectclosestPRTKernel", maxRays, output, args.data, args.size);
-    std::free(args.data);
+        "PortableRTintersectclosestPRTKernel", maxRays, output, &args, sizeof(args));
 }
 
-void PortableRTAggregate::IntersectShadow(int, ShadowRayQueue *,
-                                          SOA<PixelSampleState> *) const {
-    LOG_FATAL("PortableRTAggregate::IntersectShadow is not implemented");
+void PortableRTAggregate::IntersectShadow(
+    int maxRays, ShadowRayQueue *shadowRayQueue,
+    SOA<PixelSampleState> *pixelSampleState) const {
+    const PortableRTIntersectShadowArgs args{shadowRayQueue, pixelSampleState};
+
+    std::vector<unsigned char> output;
+    PRTBackend()->parallel_invoke(
+        "PortableRTintersectshadowPRTKernel", maxRays, output, &args, sizeof(args));
 }
 
 void PortableRTAggregate::IntersectShadowTr(int, ShadowRayQueue *,

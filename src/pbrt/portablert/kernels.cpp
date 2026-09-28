@@ -1,10 +1,9 @@
-#ifndef DISABLE_PRT_KERNELS
-#include <gtest/gtest.h> // Required so float.h don't mix infinity
-
-#include <portableRT/kernel/device_common.hpp>
-
 #define PBRT_RESTRICT
 #define PBRT_BUILD_PORTABLERT
+#include <portableRT/kernel/device_common.hpp>
+#include <gtest/gtest.h> // Required so float.h don't mix infinity
+
+#include <pbrt/gpu/portablert/intersection_kernels.cpp>
 
 
 #include <pbrt/wavefront/integrator.h>
@@ -39,6 +38,3 @@ pbrt::WavefrontPathIntegrator* g_integrator;
 #include <pbrt/textures.cpp>
 #include <pbrt/materials.cpp>
 #include <pbrt/wavefront/surfscatter.cpp>
-
-
-#endif  // DISABLE_PRT_KERNELS

@@ -32,6 +32,7 @@ namespace pbrt {
 prt::Backend *PRTBackend();
 
 static inline bool IsPortableRTKernel(const char *description) {
+
 #define MATERIAL_BSDF_DESCRIPTION(type) #type " + BxDF eval (",
 
     static constexpr const char *ported_kernels[] = {

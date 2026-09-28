@@ -27,7 +27,7 @@ namespace pbrt {
 // Shape and the referenced PBRT objects are allocated through PBRT's shared
 // allocator, so the same records can be read by a PRT kernel.
 struct PortableRTTriangleRecord {
-    Shape shape;
+    Triangle triangle;
     Material material;
     Light areaLight;
     MediumInterface mediumInterface;
