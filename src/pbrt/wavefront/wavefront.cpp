@@ -45,10 +45,10 @@ void RenderWavefront(BasicScene &scene) {
     LOG_VERBOSE("Total rendering time: %.3f s", seconds);
 
     if (Options->printStatistics) {
-#ifdef PBRT_BUILD_GPU_RENDERER
+#if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
         if (Options->useGPU)
             ReportKernelStats();
-#endif  // PBRT_BUILD_GPU_RENDERER
+#endif
 
         Printf("Wavefront integrator statistics:\n");
         Printf("%s\n", integrator->stats->Print());

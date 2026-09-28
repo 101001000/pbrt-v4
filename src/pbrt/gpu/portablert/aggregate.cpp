@@ -184,7 +184,7 @@ void PortableRTAggregate::IntersectClosest(
         instanceOffsets.data()};
 
     std::vector<unsigned char> output;
-    PRTBackend()->parallel_invoke(
+    PRTParallelInvoke(
         "PortableRTintersectclosestPRTKernel", maxRays, output, &args, sizeof(args));
 }
 
@@ -194,7 +194,7 @@ void PortableRTAggregate::IntersectShadow(
     const PortableRTIntersectShadowArgs args{shadowRayQueue, pixelSampleState};
 
     std::vector<unsigned char> output;
-    PRTBackend()->parallel_invoke(
+    PRTParallelInvoke(
         "PortableRTintersectshadowPRTKernel", maxRays, output, &args, sizeof(args));
 }
 

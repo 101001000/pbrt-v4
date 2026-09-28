@@ -31,6 +31,12 @@ namespace pbrt {
 // The backend selected by GPUInit(); null before GPUInit.
 prt::Backend *PRTBackend();
 
+// Measures synchronous host elapsed time, including launch and backend sync.
+void PRTParallelInvoke(const std::string &name, size_t worksize,
+                       std::vector<unsigned char> &output, const void *args,
+                       size_t argsSize, size_t sharedMem = 0);
+void ReportKernelStats();
+
 static inline bool IsPortableRTKernel(const char *description) {
 
 #define MATERIAL_BSDF_DESCRIPTION(type) #type " + BxDF eval (",
@@ -160,7 +166,7 @@ void GPUParallelFor(const char *description, int nItems, F func) {
         enqueued_args.pop();
     }
 
-    PRTBackend()->parallel_invoke(
+    PRTParallelInvoke(
         make_kernel_name(description),
         nItems,
         dummy_output,

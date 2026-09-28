@@ -16,6 +16,9 @@
 #include <vector>
 
 #ifdef PBRT_BUILD_PORTABLERT
+#include <chrono>
+#include <limits>
+#include <mutex>
 #include <portableRT/portableRT.hpp>
 #include <pbrt/wavefront/integrator.h>
 
@@ -23,16 +26,77 @@ namespace pbrt {
 
 namespace {
 prt::Backend *selectedBackend = nullptr;
+struct PRTKernelStats {
+    size_t launches = 0;
+    double totalMS = 0;
+    double minMS = std::numeric_limits<double>::infinity();
+    double maxMS = 0;
+};
+std::mutex prtKernelStatsMutex;
+std::map<std::string, PRTKernelStats> prtKernelStats;
 }  // namespace
 
 prt::Backend *PRTBackend() {
     return selectedBackend;
 }
 
+void PRTParallelInvoke(const std::string &name, size_t worksize,
+                       std::vector<unsigned char> &output, const void *args,
+                       size_t argsSize, size_t sharedMem) {
+    if (!Options->printStatistics) {
+        PRTBackend()->parallel_invoke(name, worksize, output, args, argsSize, sharedMem);
+        return;
+    }
+
+    auto start = std::chrono::steady_clock::now();
+    // parallel_invoke already waits for completion; do not add another sync.
+    PRTBackend()->parallel_invoke(name, worksize, output, args, argsSize, sharedMem);
+    double ms = std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - start).count();
+
+    std::lock_guard<std::mutex> lock(prtKernelStatsMutex);
+    auto &stats = prtKernelStats[name];
+    ++stats.launches;
+    stats.totalMS += ms;
+    stats.minMS = std::min(stats.minMS, ms);
+    stats.maxMS = std::max(stats.maxMS, ms);
+}
+
+void ReportKernelStats() {
+    std::vector<std::pair<std::string, PRTKernelStats>> entries;
+    {
+        std::lock_guard<std::mutex> lock(prtKernelStatsMutex);
+        entries.assign(prtKernelStats.begin(), prtKernelStats.end());
+    }
+    std::sort(entries.begin(), entries.end(), [](const auto &a, const auto &b) {
+        return a.second.totalMS > b.second.totalMS;
+    });
+    double totalMS = 0;
+    for (const auto &entry : entries)
+        totalMS += entry.second.totalMS;
+
+    Printf("PortableRT Kernel Profile (host elapsed, including launch and sync):\n");
+    for (const auto &entry : entries) {
+        const auto &stats = entry.second;
+        double percent = totalMS > 0 ? 100 * stats.totalMS / totalMS : 0;
+        Printf("  %s: %d launches, %.2f ms / %.1f%% "
+               "(avg %.3f, min %.3f, max %.3f ms)\n",
+               entry.first, stats.launches, stats.totalMS, percent,
+               stats.totalMS / stats.launches, stats.minMS, stats.maxMS);
+    }
+    Printf("Total PortableRT invocation time: %.2f ms\n"
+           "Excludes scene/BVH setup and CPU work outside kernel invocations; "
+           "not GPU event time.\n\n", totalMS);
+}
+
 std::queue<EnqueuedArgs> enqueued_args;
 std::string instance_type = "";
 
 void GPUInit() {
+    {
+        std::lock_guard<std::mutex> lock(prtKernelStatsMutex);
+        prtKernelStats.clear();
+    }
     prt::Backend *candidate = nullptr;
     for (prt::Backend *backend : prt::available_backends())
         if (candidate == nullptr || backend->name() != "CPU")
