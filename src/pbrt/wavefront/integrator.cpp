@@ -469,6 +469,17 @@ Float WavefrontPathIntegrator::Render() {
 #ifdef PBRT_BUILD_GPU_RENDERER
     if (Options->useGPU)
         PrefetchGPUAllocations();
+#elif defined(PBRT_BUILD_PORTABLERT)
+    if (Options->useGPU) {
+        auto *mr = dynamic_cast<CUDATrackedMemoryResource *>(memoryResource);
+        CHECK(mr);
+        Timer prefetchTimer;
+        mr->PrefetchToGPU();
+        if (Options->printStatistics)
+            Printf("PortableRT shared-memory prefetch: %.2f ms "
+                   "(included in total rendering time)\n",
+                   1000 * prefetchTimer.ElapsedSeconds());
+    }
 #endif  // PBRT_BUILD_GPU_RENDERER
 
     // Launch thread to copy image for display server, if enabled
@@ -641,12 +652,12 @@ Float WavefrontPathIntegrator::Render() {
         gui = nullptr;
     }
 
-    progress.Done();
-
 #if defined(PBRT_BUILD_GPU_RENDERER) || defined(PBRT_BUILD_PORTABLERT)
     if (Options->useGPU)
         GPUWait();
 #endif  // PBRT_BUILD_GPU_RENDERER || PBRT_BUILD_PORTABLERT
+
+    progress.Done();
     Float seconds = timer.ElapsedSeconds();
 
     // Shut down display server thread, if active

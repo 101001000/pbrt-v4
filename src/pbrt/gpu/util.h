@@ -31,7 +31,8 @@ namespace pbrt {
 // The backend selected by GPUInit(); null before GPUInit.
 prt::Backend *PRTBackend();
 
-// Measures synchronous host elapsed time, including launch and backend sync.
+// Enqueues work in backend order; --stats measures host submission time only.
+// Call GPUWait before accessing kernel results from the host.
 void PRTParallelInvoke(const std::string &name, size_t worksize,
                        std::vector<unsigned char> &output, const void *args,
                        size_t argsSize, size_t sharedMem = 0);
@@ -178,7 +179,7 @@ void GPUParallelFor(const char *description, int nItems, F func) {
     instance_type = "";
 
 #ifdef PBRT_DEBUG_BUILD
-    PRTBackend()->sync();
+    GPUWait();
         std::cout << "Sync parallel for: " << description << std::endl;
     LOG_VERBOSE("Post-sync %s", description);
 #endif

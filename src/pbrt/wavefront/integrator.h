@@ -101,6 +101,7 @@ class WavefrontPathIntegrator {
                 GPUParallelFor(description, nItems, func);
             } else {
                 std::cout << "Pending ParallelFor kernel to port: " << description << std::endl;
+                GPUWait();
                 pbrt::ParallelFor(0, nItems, func);
             }
 #else
@@ -121,6 +122,7 @@ class WavefrontPathIntegrator {
                 GPUParallelFor(description, 1, [=] PBRT_GPU(int) mutable { func(); });
             } else {
                 std::cout << "Pending Do kernel to port: " << description << std::endl;
+                GPUWait();
                 func();
             }}
 #else

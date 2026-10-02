@@ -148,6 +148,7 @@ void ForAllQueued(const char *desc, const WorkQueue<WorkItem> *q, int maxQueued,
                 func((*q)[index]);
             });
         } else {
+            GPUWait(); // CPU fallback consumes queues produced by pending kernels.
             std::cout << "Pending ForAllQueued kernel to port: " << desc << std::endl;
             ParallelFor(0, q->Size(), [&](int index) {
                 func((*q)[index]);

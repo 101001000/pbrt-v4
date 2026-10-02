@@ -90,7 +90,7 @@ inline T atomic_load_relaxed(const T *ptr) {
         T,
         sycl::memory_order::relaxed,
         sycl::memory_scope::device,
-        sycl::access::address_space::generic_space>;
+        sycl::access::address_space::global_space>;
 
     return AtomicRef(*const_cast<T *>(ptr)).load();
 }
@@ -101,7 +101,7 @@ inline void atomic_store_relaxed(T *ptr, T value) {
         T,
         sycl::memory_order::relaxed,
         sycl::memory_scope::device,
-        sycl::access::address_space::generic_space>;
+        sycl::access::address_space::global_space>;
 
     AtomicRef(*ptr).store(value);
 }
@@ -112,7 +112,7 @@ inline T atomic_fetch_add_relaxed(T *ptr, T value) {
         T,
         sycl::memory_order::relaxed,
         sycl::memory_scope::device,
-        sycl::access::address_space::generic_space>;
+        sycl::access::address_space::global_space>;
 
     return AtomicRef(*ptr).fetch_add(value);
 }

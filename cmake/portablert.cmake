@@ -19,23 +19,10 @@ if (NOT EXISTS "${PORTABLERT_ROOT}/lib/cmake/portableRT/portableRTConfig.cmake")
            "Set -DPORTABLERT_ROOT=<path to portableRT's build/install directory>.")
 endif ()
 
-# Select exactly which prebuilt portableRT features this project consumes.
-# These must be decided before find_package loads portableRT's Features.cmake.
-set (USE_CUDA OFF)
-set (USE_OPTIX OFF)
-set (USE_HIP OFF)
-set (USE_HIPRT OFF)
-set (USE_EMBREE OFF)
-set (USE_EMBREE_SYCL OFF)
-set (USE_SYCL ON)
 
 set (portableRT_DIR "${PORTABLERT_ROOT}/lib/cmake/portableRT")
 find_package (portableRT CONFIG REQUIRED)
 
-# The installed kernel macros probe for CUDA/HIP to pick extra SYCL targets;
-# pin the target list to the Intel GPU/SPIR-V target that portableRT itself
-# was built for.
-set (KA_SYCL_COMPILE_TARGETS "nvptx64-nvidia-cuda" CACHE STRING "portableRT SYCL kernel targets")
 
 if (USE_SYCL)
   message (STATUS "portableRT: ${PORTABLERT_ROOT} (SYCL, DPC++: ${DPCPP_ROOT})")

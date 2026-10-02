@@ -862,8 +862,10 @@ class TaggedPointer {
     static_assert(sizeof(uintptr_t) <= sizeof(uint64_t),
                   "Expected pointer size to be <= 64 bits");
     // TaggedPointer Private Members
-    static constexpr int tagShift = 57;
-    static constexpr int tagBits = 64 - tagShift;
+    static constexpr int tagShift = 56;
+    static constexpr int tagBits = 5; // Changed to make it work with intel and the lack of 64 bits in their gpus.
+    static_assert(sizeof...(Ts) < (1ull << tagBits), 
+                  "Too many types for TaggedPointer");
     static constexpr uint64_t tagMask = ((1ull << tagBits) - 1) << tagShift;
     static constexpr uint64_t ptrMask = ~tagMask;
     uint64_t bits = 0;

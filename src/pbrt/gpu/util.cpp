@@ -34,6 +34,7 @@ struct PRTKernelStats {
 };
 std::mutex prtKernelStatsMutex;
 std::map<std::string, PRTKernelStats> prtKernelStats;
+double prtWaitMS = 0;
 }  // namespace
 
 prt::Backend *PRTBackend() {
@@ -45,14 +46,19 @@ void PRTParallelInvoke(const std::string &name, size_t worksize,
                        size_t argsSize, size_t sharedMem) {
     if (!Options->printStatistics) {
         PRTBackend()->parallel_invoke(name, worksize, output, args, argsSize, sharedMem);
+        if (!Options->displayServer.empty())
+            GPUWait(); // Preserve the existing display-server scheduling.
         return;
     }
 
     auto start = std::chrono::steady_clock::now();
-    // parallel_invoke already waits for completion; do not add another sync.
+    // Preserve queue ordering without a host wait after every kernel.
     PRTBackend()->parallel_invoke(name, worksize, output, args, argsSize, sharedMem);
     double ms = std::chrono::duration<double, std::milli>(
                     std::chrono::steady_clock::now() - start).count();
+
+    if (!Options->displayServer.empty())
+        GPUWait();
 
     std::lock_guard<std::mutex> lock(prtKernelStatsMutex);
     auto &stats = prtKernelStats[name];
@@ -75,7 +81,7 @@ void ReportKernelStats() {
     for (const auto &entry : entries)
         totalMS += entry.second.totalMS;
 
-    Printf("PortableRT Kernel Profile (host elapsed, including launch and sync):\n");
+    Printf("PortableRT Submission Profile (host time in async launch, not GPU time):\n");
     for (const auto &entry : entries) {
         const auto &stats = entry.second;
         double percent = totalMS > 0 ? 100 * stats.totalMS / totalMS : 0;
@@ -84,9 +90,10 @@ void ReportKernelStats() {
                entry.first, stats.launches, stats.totalMS, percent,
                stats.totalMS / stats.launches, stats.minMS, stats.maxMS);
     }
-    Printf("Total PortableRT invocation time: %.2f ms\n"
-           "Excludes scene/BVH setup and CPU work outside kernel invocations; "
-           "not GPU event time.\n\n", totalMS);
+    Printf("Total PortableRT submission time: %.2f ms\n"
+           "Excludes explicit completion waits and scene/BVH setup. "
+           "CPU backends may execute work within submission.\n\n", totalMS);
+    Printf("PortableRT explicit host waits: %.2f ms\n\n", prtWaitMS);
 }
 
 std::queue<EnqueuedArgs> enqueued_args;
@@ -96,6 +103,7 @@ void GPUInit() {
     {
         std::lock_guard<std::mutex> lock(prtKernelStatsMutex);
         prtKernelStats.clear();
+        prtWaitMS = 0;
     }
     prt::Backend *candidate = nullptr;
     for (prt::Backend *backend : prt::available_backends())
@@ -131,6 +139,31 @@ void GPUInit() {
     LOG_VERBOSE("portableRT backend %s (%s), BVH layout %s", selectedBackend->name().c_str(),
                 selectedBackend->device_name().c_str(),
                 selectedBackend->get_bvh_layout()->name.c_str());
+
+    unsigned int block_size = 1;
+
+    if (const char* env = std::getenv("PRT_BLOCKSIZE")) {
+        char* end = nullptr;
+        unsigned long v = std::strtoul(env, &end, 10);
+        
+        if (end != env && *end == '\0' && v > 0) {
+            block_size = static_cast<unsigned int>(v);
+        }
+    }
+    
+    unsigned int layout = 0;
+
+    if (const char* env = std::getenv("PRT_LAYOUT")) {
+        char* end = nullptr;
+        unsigned long v = std::strtoul(env, &end, 10);
+
+        if (end != env && *end == '\0' && v > 0) {
+            layout = static_cast<unsigned int>(v);
+        }
+    }
+
+    selectedBackend->select_bvh_layout(layout);
+    selectedBackend->set_ka_blocksize(block_size);
 }
 
 void PRTCopyToSymbol(const char *name, const void *src, size_t size) {
@@ -142,12 +175,23 @@ void PRTCopyToSymbol(const char *name, const void *src, size_t size) {
 void GPUThreadInit() {}
 
 void GPUWait() {
-    if (selectedBackend != nullptr)
+    if (!selectedBackend)
+        return;
+    if (!Options->printStatistics) {
         selectedBackend->sync();
+        return;
+    }
+    auto start = std::chrono::steady_clock::now();
+    selectedBackend->sync();
+    double ms = std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - start).count();
+    std::lock_guard<std::mutex> lock(prtKernelStatsMutex);
+    prtWaitMS += ms;
 }
 
 void GPUMemset(void *ptr, int byte, size_t bytes) {
     // Wavefront queues live in shared memory (host-writable, device-visible).
+    GPUWait();
     memset(ptr, byte, bytes);
 }
 

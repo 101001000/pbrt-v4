@@ -14,20 +14,20 @@ class ZSobolSampler;
 }
 
 #define PBRT_SAMPLERS(X)                  \
+    X(HaltonSampler)                      \
     X(PMJ02BNSampler)                     \
     X(IndependentSampler)                 \
     X(StratifiedSampler)                  \
-    X(HaltonSampler)                      \
     X(PaddedSobolSampler)                 \
     X(SobolSampler)                       \
-    X(ZSobolSampler)
+    X(ZSobolSampler) 
 
 #define PBRT_EVALUATE_MATERIALS(X)        \
     X(CoatedDiffuseMaterial)              \
+    X(DiffuseMaterial)                    \
     X(CoatedConductorMaterial)            \
     X(ConductorMaterial)                  \
     X(DielectricMaterial)                 \
-    X(DiffuseMaterial)                    \
     X(DiffuseTransmissionMaterial)        \
     X(HairMaterial)                       \
     X(MeasuredMaterial)                   \

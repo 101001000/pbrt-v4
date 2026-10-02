@@ -306,6 +306,15 @@ prt_kernel void CoatedDiffuseMaterialBxDFevalBasictexPRTKernel(
         queue, nextRayQueue, movingFromCamera, global_idx);
 }
 
+prt_kernel void DiffuseMaterialBxDFevalBasictexPRTKernel(
+    pbrt::WorkQueue<pbrt::MaterialEvalWorkItem<pbrt::DiffuseMaterial>> *queue,
+    pbrt::RayQueue *nextRayQueue, pbrt::Transform movingFromCamera) {
+    pbrt::EvaluateMaterialBSDFKernelImpl<
+        pbrt::DiffuseMaterial, pbrt::BasicTextureEvaluator>(
+        queue, nextRayQueue, movingFromCamera, global_idx);
+}
+
+/*
 prt_kernel void CoatedDiffuseMaterialBxDFevalUniversaltexPRTKernel(
     pbrt::WorkQueue<pbrt::MaterialEvalWorkItem<pbrt::CoatedDiffuseMaterial>> *queue,
     pbrt::RayQueue *nextRayQueue, pbrt::Transform movingFromCamera) {
@@ -359,14 +368,6 @@ prt_kernel void DielectricMaterialBxDFevalUniversaltexPRTKernel(
     pbrt::RayQueue *nextRayQueue, pbrt::Transform movingFromCamera) {
     pbrt::EvaluateMaterialBSDFKernelImpl<
         pbrt::DielectricMaterial, pbrt::UniversalTextureEvaluator>(
-        queue, nextRayQueue, movingFromCamera, global_idx);
-}
-
-prt_kernel void DiffuseMaterialBxDFevalBasictexPRTKernel(
-    pbrt::WorkQueue<pbrt::MaterialEvalWorkItem<pbrt::DiffuseMaterial>> *queue,
-    pbrt::RayQueue *nextRayQueue, pbrt::Transform movingFromCamera) {
-    pbrt::EvaluateMaterialBSDFKernelImpl<
-        pbrt::DiffuseMaterial, pbrt::BasicTextureEvaluator>(
         queue, nextRayQueue, movingFromCamera, global_idx);
 }
 
@@ -456,7 +457,7 @@ prt_kernel void ThinDielectricMaterialBxDFevalUniversaltexPRTKernel(
     pbrt::EvaluateMaterialBSDFKernelImpl<
         pbrt::ThinDielectricMaterial, pbrt::UniversalTextureEvaluator>(
         queue, nextRayQueue, movingFromCamera, global_idx);
-}
+}*/
 
 #endif
 

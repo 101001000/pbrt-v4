@@ -58,9 +58,22 @@ void CUDATrackedMemoryResource::do_deallocate(void *p, size_t size, size_t align
 }
 
 void CUDATrackedMemoryResource::PrefetchToGPU() const {
-    // Shared memory is coherent between host and device; nothing to do.
-    if (PRTBackend() != nullptr)
-        PRTBackend()->sync();
+    auto *backend = PRTBackend();
+    if (!backend)
+        return;
+
+    // Called after scene setup, before rendering, with no concurrent deallocation.
+    std::lock_guard<std::mutex> lock(mutex);
+    size_t bytes = 0;
+    for (const auto &[ptr, size] : allocations) {
+        if (!ptr || size == 0)
+            continue;
+        backend->shared_prefetch(ptr, size);
+        bytes += size;
+    }
+    backend->sync();
+    LOG_VERBOSE("PortableRT prefetch requests synchronized: %d bytes requested "
+                "(device residency depends on backend support)", bytes);
 }
 
 CUDATrackedMemoryResource CUDATrackedMemoryResource::singleton;

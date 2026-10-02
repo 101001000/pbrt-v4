@@ -62,7 +62,10 @@ prt_kernel void Generateraysamples_##sampler_type##PRTKernel( \
     g_integrator->pixelSampleState.samples[w.pixelIndex] = rs;                     \
 }
 
-PBRT_SAMPLERS(DEFINE_GENERATE_RAY_SAMPLES_KERNEL)
+#define PBRT_SAMPLERS_THIN(X)                  \
+    X(HaltonSampler)                      
+//PBRT_SAMPLERS(DEFINE_GENERATE_CAMERA_RAYS_KERNEL)
+PBRT_SAMPLERS_THIN(DEFINE_GENERATE_RAY_SAMPLES_KERNEL)
 
 #endif
 

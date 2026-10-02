@@ -28,6 +28,8 @@ DPCPP_ROOT="${DPCPP_ROOT:-/homelocal/encalle_local/Desktop/CleanBuilds/dpc++6.1.
 
 CMAKE="${CMAKE:-cmake}"
 
+export PRT_DISABLE_DEVICE_FUNCTIONS=1
+
 # ---------------------------------------------------------------------------
 # 1. Configure (single pass; do not reconfigure after Imath was found,
 #    that loses the Imath target)
@@ -46,11 +48,12 @@ CMAKE="${CMAKE:-cmake}"
     -DROCM_ROOT=/opt/rocm/ \
     -DPRT_GLOBAL_PROPAGATION=OFF \
     -DUSE_SYCL=ON \
-    -DUSE_EMBREE=OFF \
+    -DUSE_EMBREE=ON \
     -DUSE_CUDA=ON \
     -DUSE_OPTIX=ON \
-    -DUSE_HIP=OFF \
+    -DUSE_HIP=ON \
     -DUSE_HIPRT=OFF \
+    -DKA_SYCL_COMPILE_TARGETS="nvptx64-nvidia-cuda,spir64,amdgcn-amd-amdhsa" \
     -S "${ROOT}"
 
 

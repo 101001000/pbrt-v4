@@ -77,7 +77,11 @@ prt_kernel void GeneratecameraraysPRTKernel_##sampler_type(                     
     }                                                                              \
 }
 
-PBRT_SAMPLERS(DEFINE_GENERATE_CAMERA_RAYS_KERNEL)
+
+#define PBRT_SAMPLERS_THIN(X)                  \
+    X(HaltonSampler)                      
+//PBRT_SAMPLERS(DEFINE_GENERATE_CAMERA_RAYS_KERNEL)
+PBRT_SAMPLERS_THIN(DEFINE_GENERATE_CAMERA_RAYS_KERNEL)
 
 #endif
 
